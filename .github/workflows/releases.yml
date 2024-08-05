@@ -1,46 +1,59 @@
-name: Release
+name: Create Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+  release:
+    types: [created]
 
 jobs:
-  build-and-publish:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
+    - name: Checkout code
+      uses: actions/checkout@v3.6.0
+      with:
+        submodules: 'recursive'
 
-      - name: Setup .NET Core
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: 8.0.x
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v3.2.0
+      with:
+        dotnet-version: 8.0.x
 
-      - name: Build and publish
-        run: |
-          dotnet publish -c Release -o release/
-          cd release
-          zip -r ${{ github.ref_name }}.zip *
-          cd ..
+    - name: Restore dependencies
+      run: dotnet restore
 
-      - name: Create Release
-        uses: actions/create-release@v1
-        with:
-          tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
-          body: |
-            This release contains the following changes:
-            - [List of changes]
-          draft: false
-          prerelease: false
+    - name: Build project
+      run: dotnet build Content.Packaging --configuration Release --no-restore /m
 
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: release/${{ github.ref_name }}.zip
-          asset_name: ${{ github.ref_name }}.zip
-          asset_content_type: application/zip
+    - name: Package server
+      run: dotnet run --project Content.Packaging server --platform linux-x64
+
+    - name: Package client
+      run: dotnet run --project Content.Packaging client --no-wipe-release
+
+    - name: Shuffle files around
+      run: |
+        mkdir -p release/${{ github.sha }}
+        mv release/*.zip "release/${{ github.sha }}"
+
+    - name: Create GitHub Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.sha }}
+        release_name: Release ${{ github.sha }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Upload files to GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: release/${{ github.sha }}/*.zip
+        asset_name: ${{ github.sha }}.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
