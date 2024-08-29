@@ -2036,52 +2036,43 @@ Entries:
       - {message: Теперь нианы могут сьесть берет СИ, type: Fix}
     id: 211
     time: '2024-06-23T04:19:00.0000000+00:00'
-  - author: themanyfaceddemon
+  - author: Schrodinger71
     changes:
-      - {message: Исправлен автоматизированный CL, type: Fix}
-    time: '2024-06-26T23:21:08Z'
+      - {message: Добавлено веселье!, type: Add}
+      - {message: Убрано веселье!, type: Remove}
+      - {message: Изменено веселье!, type: Tweak}
+      - {message: Исправлено веселье!, type: Fix}
+    time: '2024-08-29T20:17:21Z'
     id: 212
   - author: Schrodinger71
     changes:
-      - {message: Добавлена информация об команде разработки Adventure Time., type: Add}
-    time: '2024-06-27T09:41:16Z'
+      - {message: Добавлено веселье!, type: Add}
+      - {message: Убрано веселье!, type: Remove}
+      - {message: Изменено веселье!, type: Tweak}
+      - {message: Исправлено веселье!, type: Fix}
+    time: '2024-08-29T20:24:36Z'
     id: 213
   - author: Schrodinger71
     changes:
-      - {message: 'Upstream 27.06.24, подтянуты коммиты с корвакса.', type: Tweak}
-    time: '2024-06-27T17:32:38Z'
+      - {message: Добавлено веселье!, type: Add}
+      - {message: Убрано веселье!, type: Remove}
+      - {message: Изменено веселье!, type: Tweak}
+      - {message: Исправлено веселье!, type: Fix}
+    time: '2024-08-29T20:33:18Z'
     id: 214
-  - author: Darki255
+  - author: Schrodinger71
     changes:
-      - {message: Добавлен немецкий акцент, type: Add}
-    time: '2024-07-09T18:58:31Z'
+      - {message: Добавлено веселье!, type: Add}
+      - {message: Убрано веселье!, type: Remove}
+      - {message: Изменено веселье!, type: Tweak}
+      - {message: Исправлено веселье!, type: Fix}
+    time: '2024-08-29T20:39:42Z'
     id: 215
-  - author: Ratyyy
+  - author: Schrodinger71
     changes:
-      - {message: Изменены многие спрайты., type: Tweak}
-    time: '2024-07-14T08:59:33Z'
+      - {message: Добавлено веселье!, type: Add}
+      - {message: Убрано веселье!, type: Remove}
+      - {message: Изменено веселье!, type: Tweak}
+      - {message: Исправлено веселье!, type: Fix}
+    time: '2024-08-29T20:50:15Z'
     id: 216
-  - author: Шрёдька
-    changes:
-      - {message: 'Upstream 12.07.24, подтянуты коммиты с корвакса.', type: Tweak}
-    time: '2024-07-15T13:36:26Z'
-    id: 217
-  - author: Крыска
-    changes:
-      - {message: НТ начало поставлять новое снаряжение для ОБР., type: Add}
-      - {message: 'После собрания акционеров, было принято решение сформировать отдельные
-          отряды для борьбы с бунтами.', type: Add}
-      - {message: 'Величайшие умы НТ пришли к выводу, что в m-90 можно заряжать гранаты
-          в подствольный гранатомёт!', type: Add}
-    time: '2024-07-25T10:57:24Z'
-    id: 218
-  - author: Шрёдька
-    changes:
-      - {message: 'Подтянуты изменения с корвакса, 21.07.24.', type: Tweak}
-    time: '2024-07-26T23:39:11Z'
-    id: 219
-  - author: Шрёдька
-    changes:
-      - {message: 'Подтянуты коммиты с корвакса, 27.07.24', type: Tweak}
-    time: '2024-07-27T16:15:51Z'
-    id: 220
