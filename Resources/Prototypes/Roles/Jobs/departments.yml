@@ -82,6 +82,7 @@
   - Pilot # Corvax-Pilot
   - Detective
   - Warden
+  - ADTInvestigator # ADT
 
 - type: department
   id: Science
