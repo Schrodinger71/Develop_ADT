@@ -1,6 +1,8 @@
 name: Auto CL update
 
 on:
+  workflow_dispatch:
+  
   push:
     branches:
       - master
@@ -29,12 +31,12 @@ jobs:
         python-version: '3.x'
 
     - name: Install requirements
-      run: pip install requests pyyaml
+      run: pip install aiohttp pyyaml
 
     - name: Run post-merge script
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: python Tools/ADT/auto_cl.py "${{ env.GITHUB_TOKEN }}" "${{ github.repository }}"
+      run: python Tools/ADT/auto_cl.py "${{ secrets.PAT_CL_TOKEN }}" "${{ github.repository }}"
 
     - name: Configure Git
       run: |
