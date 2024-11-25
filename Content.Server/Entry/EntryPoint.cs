@@ -39,6 +39,7 @@ using Robust.Shared.Prototypes;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 using Content.Server.ADT.Export;
+using Content.Server.Discord;
 
 namespace Content.Server.Entry
 {
@@ -116,6 +117,7 @@ namespace Content.Server.Entry
                 IoCManager.Resolve<TTSManager>().Initialize(); // Corvax-TTS
                 IoCManager.Resolve<ExportManager>().Initialize();   // ADT Export
                 IoCManager.Resolve<ServerInfoManager>().Initialize();
+                IoCManager.Resolve<DiscordLink>().Initialize();
                 IoCManager.Resolve<ServerApi>().Initialize();
 
                 _voteManager.Initialize();
@@ -196,6 +198,7 @@ namespace Content.Server.Entry
         {
             _playTimeTracking?.Shutdown();
             _dbManager?.Shutdown();
+            IoCManager.Resolve<DiscordLink>().Shutdown();
             IoCManager.Resolve<ServerApi>().Shutdown();
         }
 

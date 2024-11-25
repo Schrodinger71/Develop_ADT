@@ -20,6 +20,12 @@ using Robust.Shared.Player;
 using Robust.Shared.Replays;
 using Robust.Shared.Utility;
 
+using System.Threading.Tasks;
+using Content.Server.MoMMI;
+using Content.Server.Discord;
+using Discord.WebSocket;
+using Robust.Shared.Asynchronous;
+
 namespace Content.Server.Chat.Managers;
 
 /// <summary>
@@ -47,6 +53,9 @@ internal sealed partial class ChatManager : IChatManager
     [Dependency] private readonly PlayerRateLimitManager _rateLimitManager = default!;
     [Dependency] private readonly SponsorsManager _sponsorsManager = default!; // Corvax-Sponsors
 
+    [Dependency] private readonly DiscordLink _discordLink = default!;
+    [Dependency] private readonly ITaskManager _taskManager = default!;
+
     /// <summary>
     /// The maximum length a player-sent message can be sent
     /// </summary>
@@ -55,6 +64,8 @@ internal sealed partial class ChatManager : IChatManager
     private bool _oocEnabled = true;
     private bool _adminOocEnabled = true;
 
+    private ulong _relayChannelId = 0;
+    private ulong _adminRelayChannelId = 0;
     private readonly Dictionary<NetUserId, ChatUser> _players = new();
 
     public void Initialize()
@@ -65,7 +76,51 @@ internal sealed partial class ChatManager : IChatManager
         _configurationManager.OnValueChanged(CCVars.OocEnabled, OnOocEnabledChanged, true);
         _configurationManager.OnValueChanged(CCVars.AdminOocEnabled, OnAdminOocEnabledChanged, true);
 
+        _configurationManager.OnValueChanged(CCVars.OocRelayChannelId, OnOocChannelChanged, true);
+        _configurationManager.OnValueChanged(CCVars.AdminRelayChannelId, OnAdminChannelChanged, true);
+
+        _discordLink.OnMessageReceived += MessageReceived;
+
         RegisterRateLimits();
+    }
+
+    private void MessageReceived(SocketMessage arg)
+    {
+        if (arg.Author.IsBot)
+        {
+            return;
+        }
+        if (arg.Channel.Id == _relayChannelId)
+        {
+            _taskManager.RunOnMainThread(() =>
+            {
+                SendHookOOC(arg.Author.Username, arg.Content);
+            });
+        }
+        else if (arg.Channel.Id == _adminRelayChannelId)
+        {
+            _taskManager.RunOnMainThread(() =>
+            {
+                SendAdminChat("(D) " + arg.Author.Username, arg.Content);
+            });
+        }
+    }
+    private void OnAdminChannelChanged(string id)
+    {
+        if (!ulong.TryParse(id, out var channelId))
+        {
+            return;
+        }
+        _adminRelayChannelId = channelId;
+    }
+
+    private void OnOocChannelChanged(string id)
+    {
+        if (!ulong.TryParse(id, out var channelId))
+        {
+            return;
+        }
+        _relayChannelId = channelId;
     }
 
     private void OnOocEnabledChanged(bool val)
@@ -269,6 +324,7 @@ internal sealed partial class ChatManager : IChatManager
         ChatMessageToAll(ChatChannel.OOC, message, wrappedMessage, EntityUid.Invalid, hideChat: false, recordReplay: true, colorOverride: colorOverride, author: player.UserId);
         _mommiLink.SendOOCMessage(player.Name, message.Replace("@", "\\@").Replace("<", "\\<").Replace("/", "\\/")); // @ and < are both problematic for discord due to pinging. / is sanitized solely to kneecap links to murder embeds via blunt force
         _adminLogger.Add(LogType.Chat, LogImpact.Low, $"OOC from {player:Player}: {message}");
+        _discordLink.SendMessage($"**OOC**: `{player.Name}`: {message}", _relayChannelId);
     }
 
     private void SendAdminChat(ICommonSession player, string message)
@@ -311,6 +367,30 @@ internal sealed partial class ChatManager : IChatManager
         }
 
         _adminLogger.Add(LogType.Chat, $"Admin chat from {player:Player}: {message}");
+        _discordLink.SendMessage($"**Admin Chat**: `{player.Name}`: {message}", _adminRelayChannelId);
+    }
+
+    private void SendAdminChat(string username, string message)
+    {
+        var clients = _adminManager.ActiveAdmins.Select(p => p.ConnectedClient);
+        var wrappedMessage = Loc.GetString("chat-manager-send-admin-chat-wrap-message",
+            ("adminChannelName", Loc.GetString("chat-manager-admin-channel-name")),
+            ("playerName", username), ("message", FormattedMessage.EscapeText(message)));
+
+        foreach (var client in clients)
+        {
+
+            ChatMessageToOne(ChatChannel.AdminChat,
+                message,
+                wrappedMessage,
+                default,
+                false,
+                client,
+                audioPath: default,
+                audioVolume: default);
+        }
+
+        _adminLogger.Add(LogType.Chat, $"Admin chat (relay) from {username}: {message}");
     }
 
     #endregion

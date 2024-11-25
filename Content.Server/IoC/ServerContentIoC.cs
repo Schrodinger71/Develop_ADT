@@ -77,6 +77,7 @@ namespace Content.Server.IoC
             IoCManager.Register<DiscordWebhook>();
             IoCManager.Register<VoteWebhooks>();
             IoCManager.Register<ServerDbEntryManager>();
+            IoCManager.Register<DiscordLink>();
             IoCManager.Register<ISharedPlaytimeManager, PlayTimeTrackingManager>();
             IoCManager.Register<ServerApi>();
             IoCManager.Register<JobWhitelistManager>();

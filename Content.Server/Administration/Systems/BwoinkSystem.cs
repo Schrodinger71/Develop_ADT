@@ -26,6 +26,13 @@ using Robust.Shared.Player;
 using Robust.Shared.Timing;
 using Robust.Shared.Utility;
 
+using Colorr = Discord.Color;
+using Discord;
+using Discord.Rest;
+using Discord.WebSocket;
+using Content.Server.Maps;
+using Content.Shared.Access.Systems;
+
 namespace Content.Server.Administration.Systems
 {
     [UsedImplicitly]
@@ -43,6 +50,12 @@ namespace Content.Server.Administration.Systems
         [Dependency] private readonly IAfkManager _afkManager = default!;
         [Dependency] private readonly IServerDbManager _dbManager = default!;
         [Dependency] private readonly PlayerRateLimitManager _rateLimit = default!;
+
+        [Dependency] private readonly DiscordLink _discord = default!;
+        [Dependency] private readonly EntityManager _entityManager = default!;
+        [Dependency] private readonly AdminSystem _adminSystem = default!;
+        [Dependency] private readonly IGameMapManager _mapManager = default!;
+        [Dependency] private readonly SharedIdCardSystem _idCardSystem = default!;
 
         [GeneratedRegex(@"^https://discord\.com/api/webhooks/(\d+)/((?!.*/).*)$")]
         private static partial Regex DiscordRegex();
@@ -79,6 +92,10 @@ namespace Content.Server.Administration.Systems
         private int _maxAdditionalChars;
         private readonly Dictionary<NetUserId, DateTime> _activeConversations = new();
 
+        private bool _showThatTheMessageWasFromDiscord = true;
+        private ulong _channelId = 0;
+
+
         public override void Initialize()
         {
             base.Initialize();
@@ -99,6 +116,11 @@ namespace Content.Server.Administration.Systems
             _maxAdditionalChars = GenerateAHelpMessage(defaultParams).Length;
             _playerManager.PlayerStatusChanged += OnPlayerStatusChanged;
 
+            Subs.CVar(_config, CCVars.AdminAhelpRelayChannelId, OnChannelIdChanged, true);
+            Subs.CVar(_config, CCVars.AdminAhelpRelayShowDiscord, OnShowDiscordChanged, true);
+            _discord.OnMessageReceived += OnDiscordMessageReceived;
+            _discord.OnCommandReceived += OnReceiveNewRelay;
+
             SubscribeLocalEvent<GameRunLevelChangedEvent>(OnGameRunLevelChanged);
             SubscribeNetworkEvent<BwoinkClientTypingUpdated>(OnClientTypingUpdated);
             SubscribeLocalEvent<RoundRestartCleanupEvent>(_ => _activeConversations.Clear());
@@ -109,6 +131,144 @@ namespace Content.Server.Administration.Systems
                     CCVars.AhelpRateLimitCount,
                     PlayerRateLimitedAction)
                 );
+        }
+
+        private void OnShowDiscordChanged(bool show)
+        {
+            _showThatTheMessageWasFromDiscord = show;
+        }
+        private async void OnReceiveNewRelay(CommandReceivedEventArgs commandArgs)
+        {
+            if (commandArgs.Command != "ahelp")
+                return;
+
+            // Check if args are valid
+            if (commandArgs.Arguments.Length != 1)
+            {
+                // Don't respond to user, multiple servers may be running on the same bot.
+                return;
+            }
+
+            // Try to find user
+            var username = commandArgs.Arguments[0];
+            if (!_playerManager.TryGetSessionByUsername(username, out var session))
+            {
+                // Don't respond to user, multiple servers may be running on the same bot.
+                return;
+            }
+
+            // Check if user is already in ahelp
+            if (_relayMessages.TryGetValue(session.UserId, out var relay))
+            {
+                await commandArgs.Message.Channel.SendMessageAsync("**Warning**: There is already an ahelp thread for this player.");
+                await commandArgs.Message.Channel.SendMessageAsync($"<#{relay.channel.Id}>");
+                return;
+            }
+
+            var charName = _minds.GetCharacterName(session.UserId);
+            var lookup = await _playerLocator.LookupIdAsync(session.UserId);
+
+            if (lookup is null)
+            {
+                _sawmill.Error($"Failed to lookup Discord ID for {charName} ({session.UserId}).");
+                await commandArgs.Message.Channel.SendMessageAsync("**Warning**: Failed to lookup Discord ID for player.");
+                return;
+            }
+
+            // Create new ahelp thread
+            var channel = await RequestNewRelay($"{lookup.Username} ({charName}) - {_gameTicker.RoundId}", session.UserId);
+            if (channel is null)
+            {
+                await commandArgs.Message.Channel.SendMessageAsync("**Warning**: Failed to create ahelp thread.");
+                return;
+            }
+
+            // Add to relay messages
+            relay = (channel, _gameTicker.RunLevel);
+            _relayMessages[session.UserId] = relay;
+
+            // Notify admins
+            await channel.SendMessageAsync($"**Info:** Thread created. Further messages will be relayed to the player. <@{commandArgs.Message.Author.Id}>");
+            await commandArgs.Message.Channel.SendMessageAsync($"<#{relay.channel.Id}>");
+        }
+
+        private void OnChannelIdChanged(string obj)
+        {
+            if (string.IsNullOrEmpty(obj))
+            {
+                // No warning, this is a valid case. The relay is just disabled.
+                return;
+            }
+
+            if (!ulong.TryParse(obj, out var id))
+            {
+                _sawmill.Error("Invalid channel ID.");
+                return;
+            }
+
+            _channelId = id;
+        }
+
+        private void OnDiscordMessageReceived(SocketMessage arg)
+        {
+            if (arg.Channel is not SocketThreadChannel threadChannel)
+                return;
+
+            if (threadChannel.ParentChannel.Id != _channelId)
+                return;
+
+            if (arg.Author.IsBot) // Not ignoring bots would probably cause a loop.
+                return;
+
+            foreach (var messages in _relayMessages)
+            {
+                if (messages.Value.channel.Id != threadChannel.Id)
+                    continue;
+
+                if (!_playerManager.TryGetSessionById(messages.Key, out var session))
+                {
+                    _sawmill.Verbose($"Failed to find session for {messages.Key.UserId}.");
+                    // Respond with error message to inform admins that the player is not online.
+                    arg.Channel.SendMessageAsync("**Warning**: Failed to find session for player. They may not be online.");
+                    continue;
+                }
+
+                if (arg.Content.Trim().StartsWith("-"))
+                    continue; // That is a comment for breadmemes to discuss within the thread
+
+                // Command handling.
+                // I do this here instead of OnCommandReceived because I need to know the session and I want to avoid code duplication.
+                if (arg.Content.StartsWith(_discord.BotPrefix))
+                {
+                    var contentWithoutPrefix = arg.Content.Remove(0, _discord.BotPrefix.Length);
+                    switch (contentWithoutPrefix)
+                    {
+                        case "status":
+                            var embed = GenerateEmbed(session);
+                            arg.Channel.SendMessageAsync(embed: embed.Build());
+                            break;
+                        default:
+                            arg.Channel.SendMessageAsync("**Warning**: Unknown command.");
+                            break;
+                    }
+                    continue;
+                }
+
+                // It was originally blue, but that blue tone was too dark, then lucky said I should make it yellow. So now it's yellow.
+                var content = "[color=yellow] (d) " + arg.Author.Username + "[/color]: " + arg.Content;
+                if (!_showThatTheMessageWasFromDiscord)
+                    content = "[color=red]" + arg.Author.Username + "[/color]: " + arg.Content;
+
+                var msg = new BwoinkTextMessage(messages.Key, messages.Key, content);
+                RaiseNetworkEvent(msg, session.ConnectedClient);
+
+                LogBwoink(msg);
+
+                foreach (var admin in GetTargetAdmins())
+                {
+                    RaiseNetworkEvent(msg, admin);
+                }
+            }
         }
 
         private void PlayerRateLimitedAction(ICommonSession obj)
@@ -356,6 +516,114 @@ namespace Content.Server.Administration.Systems
         private void OnAvatarChanged(string url)
         {
             _avatarUrl = url;
+        }
+
+        private async Task<RestThreadChannel?> RequestNewRelay(string title, NetUserId targetPlayer)
+        {
+
+            if (!_discord.IsConnected)
+                return null;
+            if (!_playerManager.TryGetSessionById(targetPlayer, out var playerUid))
+            {
+                _sawmill.Error($"Requested new relay, but player session for {targetPlayer.UserId} was not found.");
+                return null;
+            }
+            var embed = GenerateEmbed(playerUid);
+            var guild = _discord.GetGuild();
+            if (guild is null)
+                _sawmill.Error("Requested new relay, but guild was not found.");
+            return null;
+        }
+
+        private EmbedBuilder GenerateEmbed(ICommonSession session)
+        {
+            var clr = GetNonAfkAdmins().Count > 0 ? Colorr.Green : Colorr.Red;
+            var job = "No entity attached";
+            var entityName = "No entity attached";
+            if (session.AttachedEntity.HasValue)
+            {
+                if (_idCardSystem.TryFindIdCard(session.AttachedEntity.Value, out var idCard))
+                {
+                    job = idCard.Comp.JobTitle ?? "Unknown";
+                }
+
+                var name = Prototype(session.AttachedEntity.Value);
+                if (name != null)
+                {
+                    entityName = name.ID;
+                }
+            }
+            var gameRules = string.Join(", ", _gameTicker.GetActiveGameRules()
+                .Select(addedGameRule => _entityManager.MetaQuery.GetComponent(addedGameRule))
+                .Select(meta => meta.EntityPrototype?.ID ?? meta.EntityPrototype?.Name ?? "Unknown")
+                .ToList());
+                if (gameRules == string.Empty)
+                gameRules = "None";
+            var playerInfo = _adminSystem.GetCachedPlayerInfo(session.UserId);
+            var antagStatus = "Unknown";
+            if (playerInfo != null)
+            {
+                 antagStatus = playerInfo.Antag ? "Yes" : "No";
+            }
+
+            var embed = new EmbedBuilder()
+            {
+                Footer = new EmbedFooterBuilder()
+                {
+                    IconUrl = _footerIconUrl
+                },
+                Fields = new List<EmbedFieldBuilder>()
+                {
+                    new()
+                    {
+                        Name = "Current Preset",
+                        Value = _gameTicker.Preset?.ID ?? "Unknown"
+                    },
+                    new()
+                    {
+                        Name = "Active Gamerules",
+                        Value = gameRules
+                    },
+                    new()
+                    {
+                        Name = "Server Name",
+                        Value = _serverName
+                    },
+                    new()
+                    {
+                        Name = "Round ID",
+                        Value = _gameTicker.RoundId
+                    },
+                    new()
+                    {
+                        Name = "Antag Status",
+                        Value = antagStatus
+                    },
+                    new()
+                    {
+                        Name = "Map",
+                        Value = _mapManager.GetSelectedMap()?.MapName ?? "Unknown"
+                    },
+                    new()
+                    {
+                        Name = "Job on ID card",
+                        Value = job
+                    },
+                    new()
+                    {
+                        Name = "Current Entity Name",
+                        Value = entityName
+                    },
+                    new()
+                    {
+                        Name = "Run Level",
+                        Value = _gameTicker.RunLevel.ToString()
+                    }
+                },
+                Color = clr,
+            };
+
+            return embed;
         }
 
         private async void ProcessQueue(NetUserId userId, Queue<string> messages)
