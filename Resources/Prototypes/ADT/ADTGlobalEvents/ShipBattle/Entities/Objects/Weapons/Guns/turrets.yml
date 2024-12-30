@@ -266,7 +266,7 @@
       selectedMode: FullAuto
       availableModes:
         - FullAuto
-      soundGunshot: 
+      soundGunshot:
         collection: ADTShipBattle30mmGunFire
     - type: MagazineVisuals
       magState: mag
