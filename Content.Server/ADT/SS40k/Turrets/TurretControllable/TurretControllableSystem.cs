@@ -18,7 +18,7 @@ public sealed class TurretControllableSystem : EntitySystem
     [Dependency] private readonly SharedTransformSystem _transformSystem = default!;
     public override void Initialize()
     {
-        // base.Initialize();
+        base.Initialize();
         SubscribeLocalEvent<TurretControllableComponent, MapInitEvent>(OnStartup);//заливаем акшон для возврата(можно добавить и другие)
         SubscribeLocalEvent<TurretControllableComponent, ComponentShutdown>(OnShutdown);//чистим\возвращаем
         SubscribeLocalEvent<TurretControllableComponent, ControlReturnActionEvent>(OnReturn);//акшон возврата

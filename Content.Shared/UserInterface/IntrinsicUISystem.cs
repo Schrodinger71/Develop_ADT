@@ -9,7 +9,7 @@ public sealed class IntrinsicUISystem : EntitySystem
 
     public override void Initialize()
     {
-        SubscribeLocalEvent<IntrinsicUIComponent, ComponentStartup>(InitActions);
+        SubscribeLocalEvent<IntrinsicUIComponent, MapInitEvent>(InitActions);
         SubscribeLocalEvent<IntrinsicUIComponent, ComponentShutdown>(OnShutdown);
         SubscribeLocalEvent<IntrinsicUIComponent, ToggleIntrinsicUIEvent>(OnActionToggle);
     }
@@ -31,7 +31,7 @@ public sealed class IntrinsicUISystem : EntitySystem
         }
     }
 
-    private void InitActions(EntityUid uid, IntrinsicUIComponent component, ComponentStartup args)
+    private void InitActions(EntityUid uid, IntrinsicUIComponent component, MapInitEvent args)
     {
         foreach (var entry in component.UIs.Values)
         {
