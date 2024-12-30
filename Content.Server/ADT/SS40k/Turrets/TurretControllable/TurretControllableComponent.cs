@@ -14,8 +14,14 @@ public sealed partial class TurretControllableComponent : Component
 
     [DataField("ControlReturnAction", customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
     public string ControlReturnAction = "ControlReturnAction";
+    [DataField("ActionAGhostShowRadar", customTypeSerializer: typeof(PrototypeIdSerializer<EntityPrototype>))]
+    public string ActionAGhostShowRadar = "ActionAGhostShowRadar";
+
     [DataField("ControlReturnActionEntity")]
     public EntityUid? ControlReturnActEntity;
+
+    [DataField("ActionAGhostShowRadarAct")]
+    public EntityUid? ActionAGhostShowRadarAct;
 
     [DataField("Range")]
     public float Range = 50f;

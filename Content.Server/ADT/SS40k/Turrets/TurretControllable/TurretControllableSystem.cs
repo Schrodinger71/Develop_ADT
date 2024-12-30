@@ -54,6 +54,7 @@ public sealed class TurretControllableSystem : EntitySystem
     public void OnStartup(EntityUid uid, TurretControllableComponent component, MapInitEvent args)
     {
         _actionsSystem.AddAction(uid, ref component.ControlReturnActEntity, component.ControlReturnAction);
+        _actionsSystem.AddAction(uid, ref component.ActionAGhostShowRadarAct, component.ActionAGhostShowRadar);
     }
     public void OnShutdown(EntityUid uid, TurretControllableComponent component, ComponentShutdown args)
     {
