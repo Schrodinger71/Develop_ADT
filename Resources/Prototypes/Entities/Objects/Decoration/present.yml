@@ -11,8 +11,7 @@
 
 - type: entity
   id: Present
-  #parent: [PresentBase, BaseStorageItem] # ADT-Commented
-  parent: [PresentBase, BaseItem]           # ADT-Fix_bug
+  parent: [PresentBase, BaseItem] # ADT-Commented
   suffix: Empty
   components:
   - type: Item
