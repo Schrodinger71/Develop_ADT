@@ -505,11 +505,13 @@ namespace Content.Server.GameTicking
         {
             var roundEndTextMarkdown = ConvertBBCodeToMarkdown(roundEndText);
 
+            // Отправляем название режима
             var contentt = $"**Режим**: {gamemodeTitle}\n";
             var payload = new WebhookPayload { Content = contentt };
             payload.AllowedMentions.AllowRoleMentions();
             SendWebHOOkDiscrodInfoENDRound(payload);
 
+            // Отправляем информацию о завершении раунда
             if (!string.IsNullOrWhiteSpace(roundEndTextMarkdown))
             {
                 var content = $"**Информация**: {roundEndTextMarkdown}\n";
@@ -539,6 +541,7 @@ namespace Content.Server.GameTicking
                 }
             }
 
+            // Группируем игроков
             var groupedPlayers = playerInfoArray
                 .GroupBy(p => new { p.PlayerOOCName, p.PlayerICName })
                 .Select(g => new
@@ -551,7 +554,11 @@ namespace Content.Server.GameTicking
 
             int totalPlayers = groupedPlayers.Count;
             var stringBuilder = new System.Text.StringBuilder();
+
+            // Сначала отправляем информацию о количестве игроков
             stringBuilder.AppendLine($"**Всего было игроков**: {totalPlayers}\n");
+
+            // Теперь отправляем "Игроки:" как заголовок
             stringBuilder.AppendLine($"**Игроки**:\n");
 
             // Разбиваем список игроков на группы по 30 человек
@@ -577,6 +584,7 @@ namespace Content.Server.GameTicking
                 SendWebHOOkDiscrodInfoENDRound(chunkPayload);
             }
 
+            // Возвращаем финальную строку для возможных других нужд
             return stringBuilder.ToString();
         }
         private async void SendWebHOOkDiscrodInfoENDRound(WebhookPayload payload)
