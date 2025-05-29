@@ -32,7 +32,7 @@ def smart_truncate(text, max_length):
 def extract_changelog_section(text):
     """Извлечение и форматирование блока :cl: с изменениями."""
     text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
-    match = re.search(r"^:cl:.*?(?:\n- .+)+", text, re.MULTILINE | re.DOTALL)
+    match = re.search(r"^(:cl:.*?(?:\n- .+)+)", text, re.MULTILINE | re.DOTALL)
     if not match:
         return None, text.strip()
 
