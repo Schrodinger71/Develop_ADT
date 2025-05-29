@@ -3,66 +3,99 @@ import os
 import json
 import re
 import requests
-from datetime import datetime
+from datetime import datetime, timezone
 
-# Эмодзи, которые поддерживаются напрямую Discord
+# Поддерживаемые эмодзи и порядок отображения
 EMOJI_MAP = {
     "add": "✨",
     "remove": "❌",
     "delete": "🗑️",
     "tweak": "🛠️",
-    "fix": "🐛"
+    "fix": "🐛",
 }
-
 EMOJI_ORDER = ["add", "remove", "delete", "tweak", "fix"]
-DARK_GREEN = 0x1F8B4C  # Тёмно-зелёный цвет эмбеда
 
-def extract_changelog(text):
-    match = re.search(r":cl:\s*(.*?)\s*(?:<!--|\Z)", text, re.DOTALL)
+MAX_FIELD_LENGTH = 1024  # Максимальная длина поля Embed
+DARK_GREEN = 0x1F8B4C    # Цвет Embed
+
+def smart_truncate(text, max_length):
+    """Умная обрезка текста: обрезает до максимальной длины, не разрывая слова или предложения."""
+    if len(text) <= max_length:
+        return text
+
+    truncated_text = text[:max_length]
+    last_period = truncated_text.rfind(".")
+    if last_period == -1:
+        return truncated_text.strip() + "..."
+    return truncated_text[:last_period + 1].strip() + "..."
+
+def extract_changelog_section(text):
+    """Извлечение и форматирование блока :cl: с изменениями."""
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
+    match = re.search(r"(:cl:.*?|\U0001F191.*?)(\n|$)", text, re.DOTALL)
     if not match:
-        return None
+        return None, text.strip()
 
-    content = match.group(1).strip()
+    cl_text = match.group(1).strip()
+    remaining = text[match.end():].strip()
+
+    # Разбор :cl: секции
     groups = {key: [] for key in EMOJI_MAP}
-
-    for line in content.splitlines():
+    for line in cl_text.splitlines():
         line = line.strip()
         if not line.startswith("-"):
             continue
-        line_content = line[1:].strip()
+        content = line[1:].strip()
         for key in EMOJI_MAP:
-            if line_content.lower().startswith(f"{key}:"):
-                desc = line_content[len(key) + 1:].strip().capitalize()
-                groups[key].append(f"{EMOJI_MAP[key]} {desc}")
+            if content.lower().startswith(f"{key}:"):
+                description = content[len(key) + 1:].strip().capitalize()
+                groups[key].append(f"{EMOJI_MAP[key]} {description}")
                 break
 
-    # если вообще нет валидных строк
     if all(len(v) == 0 for v in groups.values()):
-        return None
+        return None, text.strip()
 
-    # ===== новый аккуратный сбор =====
-    sections = []
+    # Форматирование в секции по порядку
+    formatted_sections = []
     for key in EMOJI_ORDER:
         if groups[key]:
-            sections.append("\n".join(groups[key]))
-    return "\n".join(sections)
+            formatted_sections.append("\n".join(groups[key]))
 
-def create_embed(changelog, author_name, author_avatar, branch):
+    return "\n".join(formatted_sections), remaining
+
+def create_embed(pr_data):
+    """Создание объекта Embed для Discord Webhook."""
+    description = f"{pr_data['changelog']}"
+    if pr_data["remaining"]:
+        description += f"\n\n{pr_data['remaining']}"
+
+    description = smart_truncate(description, MAX_FIELD_LENGTH)
+
     embed = {
-        "title": "Pull-Request был замержен!",
-        "description": (
-            f"**🆑 Автор:** {author_name}\n"
-            f"**Изменения:**\n\n"
-            f"{changelog}"
-        ),
-        "color": 0x006400,  # Тёмно-зелёный цвет
-        "footer": {
-            "text": f"{datetime.utcnow().strftime('%d.%m.%Y %H:%M UTC')}"
-        },
+        "title": f"Пулл-реквест замержен: {pr_data['title']}",
+        "url": pr_data["url"],
+        "color": DARK_GREEN,
+        "timestamp": pr_data["merged_at"].isoformat(),
         "thumbnail": {
-            "url": author_avatar
-        }
+            "url": pr_data["avatar_url"]
+        },
+        "fields": [
+            {
+                "name": "Изменения:",
+                "value": description,
+                "inline": False,
+            },
+            {
+                "name": "Автор:",
+                "value": pr_data["author"],
+                "inline": False,
+            },
+        ],
+        "footer": {
+            "text": "Дата мержа",
+        },
     }
+
     return embed
 
 def main():
@@ -70,37 +103,51 @@ def main():
     webhook_url = os.environ.get("DISCORD_WEBHOOK_CL")
 
     if not event_path or not webhook_url:
-        print("Missing required environment variables.")
+        print("❌ Переменные окружения не заданы.")
         return
 
-    with open(event_path, 'r', encoding='utf-8') as f:
+    with open(event_path, "r", encoding="utf-8") as f:
         event = json.load(f)
 
     pr = event.get("pull_request")
     if not pr or not pr.get("merged"):
-        print("PR not merged or no pull request data.")
+        print("❌ PR не замержен или данные отсутствуют.")
         return
 
-    body = pr.get("body", "")
+    # Извлечение и обработка данных PR
+    merged_at = datetime.strptime(pr["merged_at"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
     author = pr.get("user", {}).get("login", "Unknown")
+    title = pr.get("title", "Без названия")
+    url = pr.get("html_url", "")
+    body = pr.get("body", "").strip()
     avatar_url = pr.get("user", {}).get("avatar_url", "")
-    branch = pr.get("base", {}).get("ref", "master")
 
-    changelog = extract_changelog(body)
+    changelog, remaining = extract_changelog_section(body)
 
     if not changelog:
-        print("No valid changelog found. Skipping PR.")
+        print("❌ Не удалось найти changelog.")
         return
 
-    embed = create_embed(changelog, author, avatar_url, branch)
+    pr_data = {
+        "merged_at": merged_at,
+        "title": title,
+        "url": url,
+        "author": author,
+        "avatar_url": avatar_url,
+        "changelog": changelog,
+        "remaining": remaining,
+    }
 
-    headers = {"Content-Type": "application/json"}
+    embed = create_embed(pr_data)
     payload = {"embeds": [embed]}
-    response = requests.post(webhook_url, headers=headers, data=json.dumps(payload))
-    if response.status_code >= 400:
-        print(f"❌ Failed to send webhook: {response.status_code} - {response.text}")
-    else:
-        print("✅ Webhook sent successfully.")
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(webhook_url, headers=headers, data=json.dumps(payload))
+        response.raise_for_status()
+        print("✅ Webhook успешно отправлен.")
+    except requests.RequestException as e:
+        print(f"❌ Ошибка при отправке Webhook: {e}")
 
 if __name__ == "__main__":
     main()
