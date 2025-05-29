@@ -49,7 +49,7 @@ def extract_changelog(text):
 
 def create_embed(changelog, author_name, author_avatar, branch):
     embed = {
-        "title": "✅ Pull Request был замержен!",
+        "title": "Pull-Request был замержен!",
         "description": (
             f"**🆑 Автор:** {author_name}\n"
             f"**Изменения:**\n\n"
