@@ -23,7 +23,7 @@ def extract_changelog(text):
         return None
 
     content = match.group(1).strip()
-    groups = {key: [] for key in EMOJI_MAP.keys()}
+    groups = {key: [] for key in EMOJI_MAP}
 
     for line in content.splitlines():
         line = line.strip()
@@ -32,27 +32,24 @@ def extract_changelog(text):
         line_content = line[1:].strip()
         for key in EMOJI_MAP:
             if line_content.lower().startswith(f"{key}:"):
-                desc = line_content[len(key)+1:].strip().capitalize()
+                desc = line_content[len(key) + 1:].strip().capitalize()
                 groups[key].append(f"{EMOJI_MAP[key]} {desc}")
                 break
 
+    # если вообще нет валидных строк
     if all(len(v) == 0 for v in groups.values()):
         return None
 
-    grouped_output = []
+    # ===== новый аккуратный сбор =====
+    sections = []
     for key in EMOJI_ORDER:
-        if key in groups and groups[key]:
-            grouped_output.extend(groups[key])
-            grouped_output.append("")
-
-    if grouped_output and grouped_output[-1] == "":
-        grouped_output.pop()
-
-    return "\n".join(grouped_output)
+        if groups[key]:
+            sections.append("\n".join(groups[key]))
+    return "\n".join(sections)
 
 def create_embed(changelog, author_name, author_avatar, branch):
     embed = {
-        "title": "✅ Pull Request был замержен!",
+        "title": "Pull-Request был замержен!",
         "description": (
             f"**🆑 Автор:** {author_name}\n"
             f"**Изменения:**\n\n"
