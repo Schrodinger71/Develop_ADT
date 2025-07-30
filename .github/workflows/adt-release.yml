@@ -38,7 +38,7 @@ jobs:
       - name: Archive full repo with binaries
         run: |
           mkdir release\${{ github.sha }}
-          powershell Compress-Archive -Path * -DestinationPath release\${{ github.sha }}\adt-full-build-win.zip -CompressionLevel Optimal
+          Get-ChildItem -Path . -Exclude release | Compress-Archive -DestinationPath release\${{ github.sha }}\adt-full-build-win.zip -CompressionLevel Optimal
 
       - name: Upload release archive
         uses: actions/upload-artifact@v4
