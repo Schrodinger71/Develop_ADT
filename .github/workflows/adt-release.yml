@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: windows-latest  # 🟢 Используем Windows
+    runs-on: windows-latest
 
     steps:
       - name: Install Python dependencies
