@@ -37,8 +37,14 @@ jobs:
 
       - name: Prepare release folder
         run: |
-          mkdir "release/${{ github.sha }}"
+          mkdir -p "release/${{ github.sha }}"
           mv release/*.zip "release/${{ github.sha }}"
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: adt-release
+          path: release/**/*.zip
 
   release:
     needs: build
@@ -53,6 +59,12 @@ jobs:
         run: |
           echo "release_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
           echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: adt-release
+          path: release
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
