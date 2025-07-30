@@ -35,8 +35,8 @@ jobs:
       # - name: Package server (Linux)
       #   run: dotnet run --project Content.Packaging server --platform linux-x64
 
-      # - name: Package client
-      #   run: dotnet run --project Content.Packaging client --no-wipe-release
+      - name: Package client
+        run: dotnet run --project Content.Packaging client --no-wipe-release
 
       - name: Package Windows Server
         run: |
