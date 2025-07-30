@@ -41,8 +41,8 @@ jobs:
       - name: Package Windows Server
         run: |
           mkdir -p release
-          cd bin/Content.Server
-          zip -r ../../../release/SS14.Server_win-x64.zip .
+          cd Content.Server/bin/Release/net9.0
+          zip -r ../../../../../release/SS14.Server_win-x64.zip .
 
       - name: Prepare release folder
         run: |
