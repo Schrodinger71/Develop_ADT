@@ -35,6 +35,14 @@ jobs:
       - name: Package server (Windows)
         run: dotnet run --project Content.Packaging server --platform win-x64
 
+      - name: Copy Content.Packaging.dll to Content.Server output
+        run: |
+          SERVER_PATH=$(find Content.Server/bin/Release -type d -name "net*" | head -n 1)
+          PACKAGE_PATH=$(find Content.Packaging/bin/Release -type d -name "net*" | head -n 1)
+
+          echo "Copying Content.Packaging.dll from $PACKAGE_PATH to $SERVER_PATH"
+          cp "$PACKAGE_PATH/Content.Packaging.dll" "$SERVER_PATH"
+
       - name: Package client
         run: dotnet run --project Content.Packaging client --no-wipe-release
 
