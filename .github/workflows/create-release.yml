@@ -72,7 +72,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "auto-${{ steps.vars.outputs.release_date }}"
+          tag_name: "release-${{ steps.vars.outputs.release_date }}"
           name: "Release ${{ steps.vars.outputs.release_date }} from branch ${{ steps.vars.outputs.branch }}"
           body: |
             Автоматический билд от `${{ steps.vars.outputs.release_date }}`
