@@ -42,7 +42,11 @@ jobs:
         run: |
           mkdir -p release
           SERVER_PATH=$(find Content.Server/bin/Release -type d -name "net*" | head -n 1)
-          echo "Packaging from: $SERVER_PATH"
+          if [ -z "$SERVER_PATH" ]; then
+            echo "❌ Не удалось найти папку сборки Windows Server (net* в Content.Server/bin/Release)"
+            exit 1
+          fi
+          echo "✅ Packaging from: $SERVER_PATH"
           cd "$SERVER_PATH"
           zip -r ../../../../../release/SS14.Server_win-x64.zip .
 
