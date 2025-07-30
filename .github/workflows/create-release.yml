@@ -32,16 +32,18 @@ jobs:
       - name: Build Windows Server (Content.Server)
         run: dotnet build Content.Server --configuration Release --no-restore
 
-      - name: Package server (Linux)
-        run: dotnet run --project Content.Packaging server --platform linux-x64
+      # - name: Package server (Linux)
+      #   run: dotnet run --project Content.Packaging server --platform linux-x64
 
-      - name: Package client
-        run: dotnet run --project Content.Packaging client --no-wipe-release
+      # - name: Package client
+      #   run: dotnet run --project Content.Packaging client --no-wipe-release
 
       - name: Package Windows Server
         run: |
           mkdir -p release
-          cd Content.Server/bin/Release/net9.0
+          SERVER_PATH=$(find Content.Server/bin/Release -type d -name "net*" | head -n 1)
+          echo "Packaging from: $SERVER_PATH"
+          cd "$SERVER_PATH"
           zip -r ../../../../../release/SS14.Server_win-x64.zip .
 
       - name: Prepare release folder
