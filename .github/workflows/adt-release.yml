@@ -8,11 +8,13 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest  # 🟢 Используем Windows
 
     steps:
       - name: Install Python dependencies
-        run: sudo apt-get install -y python3-paramiko python3-lxml zip
+        run: |
+          python -m pip install --upgrade pip
+          pip install paramiko lxml
 
       - name: Checkout repository with submodules
         uses: actions/checkout@v4
@@ -25,7 +27,7 @@ jobs:
           dotnet-version: 9.0.x
 
       - name: Run prebuild script (update submodules)
-        run: python3 RUN_THIS.py
+        run: python RUN_THIS.py
 
       - name: Restore .NET dependencies
         run: dotnet restore
@@ -35,8 +37,8 @@ jobs:
 
       - name: Archive full repo with binaries
         run: |
-          mkdir -p release/${{ github.sha }}
-          zip -r "release/${{ github.sha }}/adt-full.zip" . -x ".git/*" ".github/*"
+          mkdir release\${{ github.sha }}
+          powershell Compress-Archive -Path * -DestinationPath release\${{ github.sha }}\adt-full-build-win.zip -CompressionLevel Optimal
 
       - name: Upload release archive
         uses: actions/upload-artifact@v4
@@ -46,7 +48,7 @@ jobs:
 
   release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
@@ -55,8 +57,8 @@ jobs:
       - name: Set variables
         id: vars
         run: |
-          echo "release_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
-          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "release_date=$(Get-Date -Format 'yyyy-MM-dd')" >> $env:GITHUB_OUTPUT
+          echo "branch=${{ github.ref_name }}" >> $env:GITHUB_OUTPUT
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
