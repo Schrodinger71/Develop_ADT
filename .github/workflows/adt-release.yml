@@ -29,13 +29,20 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build full solution (Release)
-        run: dotnet build --configuration Release --no-restore
+      - name: Publish (Windows executable)
+        run: |
+          dotnet publish Content.Server/Content.Server.csproj \
+            --configuration Release \
+            --runtime win-x64 \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:IncludeNativeLibrariesForSelfExtract=true \
+            -o win-publish
 
-      - name: Archive build output
+      - name: Archive release output
         run: |
           mkdir -p release/${{ github.sha }}
-          zip -r "release/${{ github.sha }}/build.zip" bin/
+          zip -r "release/${{ github.sha }}/adt-win-x64.zip" win-publish/
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
@@ -65,7 +72,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "release-${{ steps.vars.outputs.release_date }}"
+          tag_name: "release-win-x64${{ steps.vars.outputs.release_date }}"
           name: "Release ${{ steps.vars.outputs.release_date }} from branch ${{ steps.vars.outputs.branch }}"
           body: |
             Автоматический билд от ${{ steps.vars.outputs.release_date }}
