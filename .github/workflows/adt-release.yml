@@ -39,13 +39,17 @@ jobs:
       - name: Build full solution (Release)
         run: dotnet build --configuration Release --no-restore
 
+      - name: Find 7z.exe
+        shell: cmd
+        run: where 7z
+
       - name: Archive build output with 7-Zip (maximum compression)
         shell: cmd
         run: |
           set ZIP_NAME=adt-release-%GITHUB_SHA%.7z
           set OUTPUT_DIR=release\%GITHUB_SHA%
           mkdir %OUTPUT_DIR%
-          "C:\Program Files\7-Zip\7z.exe" a -t7z -mx9 %OUTPUT_DIR%\%ZIP_NAME% ^
+          "C:\ProgramData\chocolatey\lib\7zip\tools\7z.exe" a -t7z -mx9 %OUTPUT_DIR%\%ZIP_NAME% ^
             bin\Release\net9.0\win-x64\publish\* ^
             Content\*
 
