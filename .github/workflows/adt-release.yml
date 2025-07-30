@@ -35,13 +35,12 @@ jobs:
       - name: Build full solution (Release)
         run: dotnet build --configuration Release --no-restore
 
-      - name: Archive full repo with binaries
-        working-directory: ${{ github.workspace }}
+      - name: Archive build output only
         shell: pwsh
         run: |
           $releaseDir = "release\${{ github.sha }}"
           mkdir $releaseDir
-          Get-ChildItem -Path . -Exclude 'release', '.git', '.github' | Compress-Archive -DestinationPath "$releaseDir\adt-full-build-win.zip" -CompressionLevel Optimal
+          Compress-Archive -Path "bin\Release\net9.0\win-x64\publish", "Content" -DestinationPath "$releaseDir\adt-build.zip" -CompressionLevel Optimal
 
       - name: Upload release archive
         uses: actions/upload-artifact@v4
