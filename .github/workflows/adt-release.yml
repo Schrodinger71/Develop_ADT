@@ -35,18 +35,27 @@ jobs:
       - name: Build full solution (Release)
         run: dotnet build --configuration Release --no-restore
 
-      - name: Archive build output only
-        shell: pwsh
+      - name: Install 7-Zip
         run: |
-          $releaseDir = "release\${{ github.sha }}"
-          mkdir $releaseDir
-          Compress-Archive -Path "bin\Release\net9.0\win-x64\publish", "Content" -DestinationPath "$releaseDir\adt-build.zip" -CompressionLevel Optimal
+          choco install 7zip -y
+        shell: cmd
+
+      - name: Archive only necessary output (max compression)
+        shell: cmd
+        run: |
+          set ZIP_NAME=adt-release-%GITHUB_SHA%.7z
+          set OUTPUT_DIR=release\%GITHUB_SHA%
+          mkdir %OUTPUT_DIR%
+          "C:\Program Files\7-Zip\7z.exe" a -t7z -mx9 %OUTPUT_DIR%\%ZIP_NAME% ^
+            bin\Release\* ^
+            Content\* ^
+            *.dll *.exe *.config
 
       - name: Upload release archive
         uses: actions/upload-artifact@v4
         with:
           name: adt-release
-          path: release/**/*.zip
+          path: release/**/*.7z
 
   release:
     needs: build
@@ -77,6 +86,6 @@ jobs:
             Автоматический билд от ${{ steps.vars.outputs.release_date }}
             Ветка: ${{ steps.vars.outputs.branch }}
             Коммит: ${{ github.sha }}
-          files: release/**/*.zip
+          files: release/**/*.7z
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
