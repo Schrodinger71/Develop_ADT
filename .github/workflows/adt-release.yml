@@ -47,7 +47,7 @@ jobs:
           set OUTPUT_DIR=release\%GITHUB_SHA%
           mkdir %OUTPUT_DIR%
           "C:\Program Files\7-Zip\7z.exe" a -t7z -mx9 %OUTPUT_DIR%\%ZIP_NAME% ^
-            bin\Release\* ^
+            bin\**\Release\**\* ^
             Content\* ^
             *.dll *.exe *.config
 
