@@ -11,40 +11,34 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Install Python dependencies
+        run: sudo apt-get install -y python3-paramiko python3-lxml zip
+
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-
-      - name: Install dependencies
-        run: sudo apt-get install -y python3-paramiko python3-lxml
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9.0.x
 
-      - name: Run prebuild script
+      - name: Run prebuild script (update submodules)
         run: python3 RUN_THIS.py
 
-      - name: Restore dependencies
+      - name: Restore .NET dependencies
         run: dotnet restore
 
-      - name: Publish (Windows executable)
-        run: |
-          dotnet publish Content.Server/Content.Server.csproj \
-            --configuration Release \
-            --runtime win-x64 \
-            --self-contained true \
-            -p:PublishSingleFile=true \
-            -p:IncludeNativeLibrariesForSelfExtract=true \
-            -o win-publish
+      - name: Build full solution (Release)
+        run: dotnet build --configuration Release --no-restore
 
-      - name: Archive release output
+      - name: Archive full repo with binaries
         run: |
           mkdir -p release/${{ github.sha }}
-          zip -r "release/${{ github.sha }}/adt-win-x64.zip" win-publish/
+          zip -r "release/${{ github.sha }}/adt-full.zip" . -x ".git/*" ".github/*"
 
-      - name: Upload release artifacts
+      - name: Upload release archive
         uses: actions/upload-artifact@v4
         with:
           name: adt-release
@@ -55,7 +49,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set variables
         id: vars
@@ -63,7 +58,7 @@ jobs:
           echo "release_date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
           echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
 
-      - name: Download release artifacts
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           name: adt-release
@@ -72,7 +67,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "release-win-x64${{ steps.vars.outputs.release_date }}"
+          tag_name: "release-${{ steps.vars.outputs.release_date }}"
           name: "Release ${{ steps.vars.outputs.release_date }} from branch ${{ steps.vars.outputs.branch }}"
           body: |
             Автоматический билд от ${{ steps.vars.outputs.release_date }}
