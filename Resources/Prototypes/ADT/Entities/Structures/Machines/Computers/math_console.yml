@@ -19,9 +19,9 @@
     radius: 2.0
     energy: 2.0
   - type: MathConsole
-    soundCorrect: /Audio/ADT/Machines/math_correct.ogg
-    soundIncorrect: /Audio/ADT/Machines/math_incorrect.ogg
-    soundComplete: /Audio/ADT/Machines/math_complete.ogg
+    soundCorrect: /Audio/ADT/IPC/ping.ogg
+    soundIncorrect: /Audio/ADT/IPC/buzz-sigh.ogg
+    soundComplete: /Audio/ADT/IPC/synth_yes.ogg
     minPointsPerAnswer: 5
     maxPointsPerAnswer: 15
     difficultyBonus: 3

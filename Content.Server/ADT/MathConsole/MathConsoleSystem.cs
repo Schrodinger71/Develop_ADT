@@ -403,16 +403,16 @@ public sealed partial class MathConsoleSystem : EntitySystem
 
         if (x2 == x1) // вертикальная линия
         {
-            var equation = $"Найдите угловой коэффициент прямой, проходящей через точки A({x1}, {y1}) и B({x2}, {y2})";
-            var answer = "неопределен (вертикальная линия)";
-            return (equation, answer);
+            var slopeEquationText = $"Найдите угловой коэффициент прямой, проходящей через точки A({x1}, {y1}) и B({x2}, {y2})";
+            var slopeAnswerText = "неопределен (вертикальная линия)";
+            return (slopeEquationText, slopeAnswerText);
         }
 
         var slope = (y2 - y1) / (double)(x2 - x1);
-        var equation = $"Найдите угловой коэффициент прямой, проходящей через точки A({x1}, {y1}) и B({x2}, {y2})";
-        var answer = slope.ToString("F2");
+        var slopeEquation = $"Найдите угловой коэффициент прямой, проходящей через точки A({x1}, {y1}) и B({x2}, {y2})";
+        var slopeAnswer = slope.ToString("F2");
 
-        return (equation, answer);
+        return (slopeEquation, slopeAnswer);
     }
 
     // Графики функций
@@ -489,17 +489,17 @@ public sealed partial class MathConsoleSystem : EntitySystem
 
         if (m1 == m2) // параллельные линии
         {
-            var equation = $"Найдите точку пересечения прямых y = {m1}x + {b1} и y = {m2}x + {b2}";
-            var answer = "прямые параллельны, не пересекаются";
-            return (equation, answer);
+            var intersectionEquationText = $"Найдите точку пересечения прямых y = {m1}x + {b1} и y = {m2}x + {b2}";
+            var intersectionAnswerText = "прямые параллельны, не пересекаются";
+            return (intersectionEquationText, intersectionAnswerText);
         }
 
         var x = (b2 - b1) / (double)(m1 - m2);
         var y = m1 * x + b1;
-        var equation = $"Найдите точку пересечения прямых y = {m1}x + {b1} и y = {m2}x + {b2}";
-        var answer = $"({x:F2}, {y:F2})";
+        var intersectionEquation = $"Найдите точку пересечения прямых y = {m1}x + {b1} и y = {m2}x + {b2}";
+        var intersectionAnswer = $"({x:F2}, {y:F2})";
 
-        return (equation, answer);
+        return (intersectionEquation, intersectionAnswer);
     }
 
     private (string equation, string answer) GenerateLineCircleIntersection()
