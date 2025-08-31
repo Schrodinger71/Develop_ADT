@@ -1,0 +1,45 @@
+<DefaultWindow xmlns="https://spacestation14.io"
+            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            Title="Математическая консоль РНД"
+            MinSize="600 500"
+            x:Class="Content.Client.ADT.MathConsole.MathConsoleWindow">
+
+         <BoxContainer Orientation="Vertical">
+         <Label Text="Математическая консоль РНД"
+                        StyleClasses="LabelHeader"
+                        HorizontalAlignment="Center" />
+
+         <PanelContainer StyleClasses="PanelOpen">
+             <BoxContainer Orientation="Vertical">
+                 <Label Text="Решите уравнение:" StyleClasses="LabelHeader" />
+                 <Label Name="CurrentEquationText"
+                                Text="Загрузка..."
+                                StyleClasses="LabelBig"
+                                HorizontalAlignment="Center" />
+             </BoxContainer>
+         </PanelContainer>
+
+         <BoxContainer Orientation="Horizontal">
+             <LineEdit Name="AnswerInput"
+                               PlaceHolder="Введите ответ..."
+                               HorizontalExpand="True" />
+             <Button Name="SubmitButton"
+                             Text="Ответить"
+                             MinWidth="80" />
+         </BoxContainer>
+
+         <Button Name="NewEquationButton"
+                         Text="Новое уравнение"
+                         HorizontalAlignment="Center" />
+
+         <PanelContainer StyleClasses="PanelOpen">
+             <BoxContainer Orientation="Vertical">
+                 <Label Text="История решений" StyleClasses="LabelHeader" />
+                 <ScrollContainer VerticalExpand="True">
+                     <BoxContainer Name="RecordsList" Orientation="Vertical" />
+                 </ScrollContainer>
+             </BoxContainer>
+         </PanelContainer>
+     </BoxContainer>
+
+</DefaultWindow>

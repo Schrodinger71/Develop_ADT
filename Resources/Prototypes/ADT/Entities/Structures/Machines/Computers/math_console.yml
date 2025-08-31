@@ -1,0 +1,40 @@
+- type: entity
+  parent: BaseComputer
+  id: MathConsole
+  name: Математическая консоль РНД
+  description: Консоль для решения математических задач. За правильные ответы начисляются очки исследования.
+  components:
+  - type: Sprite
+    sprite: ADT/Structures/Machines/minesweeper.rsi
+    layers:
+    - map: ["computerLayerBody"]
+      state: arcade
+    - map: ["computerLayerScreen"]
+      state: screen_minesweeper
+    - map: ["enum.WiresVisualLayers.MaintenancePanel"]
+      state: panel
+      visible: false
+  - type: PointLight
+    color: "#4a90e2"
+    radius: 2.0
+    energy: 2.0
+  - type: MathConsole
+    soundCorrect: /Audio/ADT/Machines/math_correct.ogg
+    soundIncorrect: /Audio/ADT/Machines/math_incorrect.ogg
+    soundComplete: /Audio/ADT/Machines/math_complete.ogg
+    minPointsPerAnswer: 5
+    maxPointsPerAnswer: 15
+    difficultyBonus: 3
+  - type: Computer
+    board: MathConsoleCircuitboard
+  - type: ActivatableUI
+    key: enum.MathConsoleUiKey.Key
+    singleUser: true
+  - type: UserInterface
+    interfaces:
+      enum.MathConsoleUiKey.Key:
+        type: MathConsoleBoundUserInterface
+      enum.WiresUiKey.Key:
+        type: WiresBoundUserInterface
+  - type: ActivatableUIRequiresPower
+  - type: StationAiWhitelist

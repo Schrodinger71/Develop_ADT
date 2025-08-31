@@ -1,0 +1,11 @@
+- type: entity
+  parent: BaseComputerCircuitboard
+  id: MathConsoleCircuitboard
+  name: Плата математической консоли РНД
+  description: Плата для математической консоли РНД. Позволяет решать математические задачи и получать очки исследования.
+  components:
+    - type: Sprite
+      sprite: Objects/Devices/computer_chip.rsi
+      state: computer_chip
+    - type: ComputerBoard
+      prototype: MathConsole
