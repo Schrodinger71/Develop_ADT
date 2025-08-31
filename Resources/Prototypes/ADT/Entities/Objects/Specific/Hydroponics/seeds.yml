@@ -19,18 +19,6 @@
     - type: Sprite
       sprite: ADT/Objects/Specific/Hydroponics/cannabiswhite.rsi
 
-# пакет семян
-- type: entity
-  parent: SeedBase
-  name: packet of mandarin seeds
-  id: ADTMandarinSeeds
-  suffix: NewYear
-  components:
-    - type: Seed
-      seedId: ADTmandarin
-    - type: Sprite
-      sprite: ADT/Objects/Specific/Hydroponics/mandarin.rsi
-
 # Пакет семян кофе
 - type: entity
   parent: SeedBase
@@ -41,3 +29,14 @@
       seedId: ADTCoffeeTree
     - type: Sprite
       sprite: ADT/Objects/Specific/Hydroponics/coffeebeans.rsi
+
+# Пакет семян клубники
+- type: entity
+  parent: SeedBase
+  name: packet of strawberry bush seeds.
+  id: ADTStrawberrySeeds
+  components:
+    - type: Seed
+      seedId: ADTStrawberry
+    - type: Sprite
+      sprite: ADT/Objects/Specific/Hydroponics/strawberry.rsi
