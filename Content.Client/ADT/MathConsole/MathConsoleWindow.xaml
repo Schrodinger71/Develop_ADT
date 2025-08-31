@@ -1,5 +1,6 @@
 <DefaultWindow xmlns="https://spacestation14.io"
             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+            xmlns:local="clr-namespace:Content.Client.ADT.MathConsole"
             Title="Математическая консоль РНД"
             MinSize="600 500"
             x:Class="Content.Client.ADT.MathConsole.MathConsoleWindow">
@@ -16,6 +17,23 @@
                                 Text="Загрузка..."
                                 StyleClasses="LabelBig"
                                 HorizontalAlignment="Center" />
+
+                 <!-- Координатная сетка для задач с координатной геометрией -->
+                 <PanelContainer Name="CoordinateGridContainer"
+                                StyleClasses="PanelOpen"
+                                Visible="False"
+                                MinHeight="200">
+                     <BoxContainer Orientation="Vertical">
+                         <Label Text="Координатная сетка:" StyleClasses="LabelHeader" />
+                         <PanelContainer StyleClasses="PanelOpen"
+                                        MinHeight="180"
+                                        HorizontalExpand="True">
+                             <local:CoordinateGridControl Name="CoordinateGrid"
+                                                          HorizontalExpand="True"
+                                                          VerticalExpand="True" />
+                         </PanelContainer>
+                     </BoxContainer>
+                 </PanelContainer>
              </BoxContainer>
          </PanelContainer>
 
