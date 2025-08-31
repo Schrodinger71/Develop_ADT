@@ -91,7 +91,7 @@ public sealed partial class MathConsoleSystem : EntitySystem
 
     private (string equation, string answer) GenerateRandomEquation()
     {
-        var equationType = _random.Next(6); // 0: линейное, 1: квадратное, 2: кубическое, 3: геометрическое, 4: интеграл, 5: дифференциальное
+        var equationType = _random.Next(9); // 0: линейное, 1: квадратное, 2: кубическое, 3: геометрическое, 4: интеграл, 5: дифференциальное, 6: координатная геометрия, 7: графики функций, 8: точки пересечения
 
         return equationType switch
         {
@@ -101,6 +101,9 @@ public sealed partial class MathConsoleSystem : EntitySystem
             3 => GenerateGeometricEquation(),
             4 => GenerateIntegralEquation(),
             5 => GenerateDifferentialEquation(),
+            6 => GenerateCoordinateGeometry(),
+            7 => GenerateFunctionGraph(),
+            8 => GenerateIntersectionPoint(),
             _ => GenerateLinearEquation()
         };
     }
@@ -344,6 +347,171 @@ public sealed partial class MathConsoleSystem : EntitySystem
 
         var equation = $"dy/dx = {coefficient}y/x, y(1) = {initialValue}, y({xValue}) = ?";
         var answer = result.ToString("F2");
+
+        return (equation, answer);
+    }
+
+    // Координатная геометрия
+    private (string equation, string answer) GenerateCoordinateGeometry()
+    {
+        var taskType = _random.Next(3);
+
+        return taskType switch
+        {
+            0 => GenerateDistanceBetweenPoints(),
+            1 => GenerateMidpointCalculation(),
+            2 => GenerateSlopeCalculation(),
+            _ => GenerateDistanceBetweenPoints()
+        };
+    }
+
+    private (string equation, string answer) GenerateDistanceBetweenPoints()
+    {
+        var x1 = _random.Next(-10, 11);
+        var y1 = _random.Next(-10, 11);
+        var x2 = _random.Next(-10, 11);
+        var y2 = _random.Next(-10, 11);
+
+        var distance = Math.Sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+        var equation = $"Найдите расстояние между точками A({x1}, {y1}) и B({x2}, {y2})";
+        var answer = distance.ToString("F2");
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateMidpointCalculation()
+    {
+        var x1 = _random.Next(-10, 11);
+        var y1 = _random.Next(-10, 11);
+        var x2 = _random.Next(-10, 11);
+        var y2 = _random.Next(-10, 11);
+
+        var midX = (x1 + x2) / 2.0;
+        var midY = (y1 + y2) / 2.0;
+        var equation = $"Найдите середину отрезка между точками A({x1}, {y1}) и B({x2}, {y2})";
+        var answer = $"({midX}, {midY})";
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateSlopeCalculation()
+    {
+        var x1 = _random.Next(-10, 11);
+        var y1 = _random.Next(-10, 11);
+        var x2 = _random.Next(-10, 11);
+        var y2 = _random.Next(-10, 11);
+
+        if (x2 == x1) // вертикальная линия
+        {
+            var equation = $"Найдите угловой коэффициент прямой, проходящей через точки A({x1}, {y1}) и B({x2}, {y2})";
+            var answer = "неопределен (вертикальная линия)";
+            return (equation, answer);
+        }
+
+        var slope = (y2 - y1) / (double)(x2 - x1);
+        var equation = $"Найдите угловой коэффициент прямой, проходящей через точки A({x1}, {y1}) и B({x2}, {y2})";
+        var answer = slope.ToString("F2");
+
+        return (equation, answer);
+    }
+
+    // Графики функций
+    private (string equation, string answer) GenerateFunctionGraph()
+    {
+        var taskType = _random.Next(3);
+
+        return taskType switch
+        {
+            0 => GenerateLinearFunctionGraph(),
+            1 => GenerateQuadraticFunctionGraph(),
+            2 => GeneratePointOnGraph(),
+            _ => GenerateLinearFunctionGraph()
+        };
+    }
+
+    private (string equation, string answer) GenerateLinearFunctionGraph()
+    {
+        var m = _random.Next(-5, 6);
+        var b = _random.Next(-10, 11);
+
+        var equation = $"Постройте график функции y = {m}x + {b} и найдите точку пересечения с осью Y";
+        var answer = $"(0, {b})";
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateQuadraticFunctionGraph()
+    {
+        var a = _random.Next(1, 4);
+        var b = _random.Next(-5, 6);
+        var c = _random.Next(-10, 11);
+
+        var equation = $"Постройте график функции y = {a}x² + {b}x + {c} и найдите координаты вершины";
+        var vertexX = -b / (2.0 * a);
+        var vertexY = a * vertexX * vertexX + b * vertexX + c;
+        var answer = $"({vertexX:F2}, {vertexY:F2})";
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GeneratePointOnGraph()
+    {
+        var m = _random.Next(-5, 6);
+        var b = _random.Next(-10, 11);
+        var x = _random.Next(-5, 6);
+        var y = m * x + b;
+
+        var equation = $"Проверьте, лежит ли точка ({x}, {y}) на графике функции y = {m}x + {b}";
+        var answer = "да";
+
+        return (equation, answer);
+    }
+
+    // Точки пересечения
+    private (string equation, string answer) GenerateIntersectionPoint()
+    {
+        var taskType = _random.Next(2);
+
+        return taskType switch
+        {
+            0 => GenerateLinesIntersection(),
+            1 => GenerateLineCircleIntersection(),
+            _ => GenerateLinesIntersection()
+        };
+    }
+
+    private (string equation, string answer) GenerateLinesIntersection()
+    {
+        var m1 = _random.Next(-5, 6);
+        var b1 = _random.Next(-10, 11);
+        var m2 = _random.Next(-5, 6);
+        var b2 = _random.Next(-10, 11);
+
+        if (m1 == m2) // параллельные линии
+        {
+            var equation = $"Найдите точку пересечения прямых y = {m1}x + {b1} и y = {m2}x + {b2}";
+            var answer = "прямые параллельны, не пересекаются";
+            return (equation, answer);
+        }
+
+        var x = (b2 - b1) / (double)(m1 - m2);
+        var y = m1 * x + b1;
+        var equation = $"Найдите точку пересечения прямых y = {m1}x + {b1} и y = {m2}x + {b2}";
+        var answer = $"({x:F2}, {y:F2})";
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateLineCircleIntersection()
+    {
+        var h = _random.Next(-5, 6);
+        var k = _random.Next(-5, 6);
+        var r = _random.Next(2, 6);
+        var m = _random.Next(-3, 4);
+        var b = _random.Next(-8, 9);
+
+        var equation = $"Найдите точки пересечения прямой y = {m}x + {b} с окружностью (x-{h})² + (y-{k})² = {r}²";
+        var answer = "решите систему уравнений";
 
         return (equation, answer);
     }
