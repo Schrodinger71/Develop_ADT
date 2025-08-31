@@ -69,6 +69,7 @@
     board: CommandConsoleCircuitboard
   - type: ActivatableUI
     key: enum.CommandConsoleUiKey.Key
+    singleUser: true
   - type: UserInterface
     interfaces:
       enum.CommandConsoleUiKey.Key:
@@ -78,6 +79,7 @@
   - type: CommandConsole
   - type: DeviceNetwork
     prefix: NT-Computer
+    frequency: 1000
   - type: DeviceLinkSource
     ports:
       - Output

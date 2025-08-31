@@ -33,6 +33,7 @@ namespace Content.Shared.ADT.CommandConsole
             RegisterCommand("write", Write);
             RegisterCommand("run", Run);
             RegisterCommand("run_rogue", RunRogue);
+            RegisterCommand("snake", Snake);
         }
 
         public void RegisterCommand(string name, Func<string[], string> handler)
@@ -43,6 +44,8 @@ namespace Content.Shared.ADT.CommandConsole
         public bool ExitRequested { get; private set; } = false;
 
         public string CurrentPath => _currentPath;
+
+        public Directory GetRootDirectory() => _rootDirectory;
 
         public string Execute(string input)
         {
@@ -297,6 +300,11 @@ namespace Content.Shared.ADT.CommandConsole
         private string Exit(string[] args)
         {
             return "Exiting command console...";
+        }
+
+        private string Snake(string[] args)
+        {
+            return "Snake game not implemented yet. Use 'run_rogue' for a simple game.";
         }
     }
 

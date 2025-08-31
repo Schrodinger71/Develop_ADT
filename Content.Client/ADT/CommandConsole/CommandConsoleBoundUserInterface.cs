@@ -1,3 +1,4 @@
+using Content.Shared.ADT.CommandConsole;
 using JetBrains.Annotations;
 using Robust.Client.UserInterface;
 
@@ -31,6 +32,28 @@ namespace Content.Client.ADT.CommandConsole
             {
                 _window?.Close();
                 _window = null;
+            }
+        }
+
+        protected override void UpdateState(BoundUserInterfaceState state)
+        {
+            base.UpdateState(state);
+
+            if (state is CommandConsoleState consoleState)
+            {
+                _window?.HandleStateUpdate(consoleState);
+            }
+        }
+
+        protected override void ReceiveMessage(BoundUserInterfaceMessage message)
+        {
+            base.ReceiveMessage(message);
+
+            switch (message)
+            {
+                case CommandConsoleExecuteResponseMessage response:
+                    _window?.HandleExecuteResponse(response);
+                    break;
             }
         }
     }

@@ -40,6 +40,7 @@ namespace Content.Client.ADT.CommandConsole
         private EntityUid? _owner;
         private readonly IEntityManager _entMan;
         private readonly ITaskManager _taskManager = default!;
+        private CommandConsoleBoundUserInterface? _userInterface;
 
         public CommandConsoleWindow(CommandConsoleBoundUserInterface userInterface, EntityUid? owner)
         {
@@ -47,6 +48,7 @@ namespace Content.Client.ADT.CommandConsole
 
             _entMan = IoCManager.Resolve<IEntityManager>();
             _owner = owner;
+            _userInterface = userInterface;
 
             ExecuteButton.OnPressed += _ =>
             {
@@ -114,16 +116,15 @@ namespace Content.Client.ADT.CommandConsole
                     continue;
                 }
 
-                var output = _commandManager.Execute(trimmed);
-                if (!string.IsNullOrEmpty(output))
-                {
-                    result += $"{_commandManager.CurrentPath}> {trimmed}\n";
-                    result += output + "\n";
-                }
-                else
-                {
-                    result += $"{_commandManager.CurrentPath}> \n";
-                }
+                // Отправляем команду на сервер
+                var message = new CommandConsoleExecuteMessage(trimmed);
+                _userInterface?.SendMessage(message);
+
+                // Показываем команду в выводе
+                result += $"{_commandManager.CurrentPath}> {trimmed}\n";
+
+                // Временный вывод (будет заменен ответом сервера)
+                result += "Processing command on server...\n";
 
                 if (_commandManager.ExitRequested)
                 {
@@ -169,18 +170,36 @@ Booting Mini Command Console OS...
             base.Close();
         }
 
+        public void HandleStateUpdate(CommandConsoleState state)
+        {
+            _commandManager.SetState(state.RootDirectory, state.CurrentPath);
+
+            if (!string.IsNullOrEmpty(state.Input))
+            {
+                CommandInput.TextRope = new Rope.Leaf(state.Input);
+            }
+        }
+
+        public void HandleExecuteResponse(CommandConsoleExecuteResponseMessage response)
+        {
+            if (response.Success)
+            {
+                var currentOutput = OutputLabel.Text;
+                OutputLabel.Text = currentOutput + response.Output + "\n";
+            }
+        }
+
         private void SaveProgress()
         {
-            if (_owner != null && _entMan.TryGetComponent(_owner.Value, out CommandConsoleComponent? comp))
+            if (_owner != null)
             {
-                comp.Input = Rope.Collapse(CommandInput.TextRope);
+                var message = new CommandConsoleSaveStateMessage(
+                    _commandManager.GetRootDirectory(),
+                    _commandManager.CurrentPath,
+                    Rope.Collapse(CommandInput.TextRope)
+                );
 
-                comp.CurrentPath = _commandManager.CurrentPath;
-
-                if (comp.RootDirectory.Children.Count == 0)
-                {
-                    InitializeFileSystem(comp.RootDirectory);
-                }
+                _userInterface?.SendMessage(message);
             }
         }
 
@@ -195,19 +214,10 @@ Booting Mini Command Console OS...
 
         private void LoadProgress()
         {
-            if (_owner != null && _entMan.TryGetComponent(_owner.Value, out CommandConsoleComponent? comp))
+            if (_owner != null)
             {
-                if (!string.IsNullOrEmpty(comp.Input))
-                {
-                    CommandInput.TextRope = new Rope.Leaf(comp.Input);
-                }
-
-                if (comp.RootDirectory.Children.Count == 0)
-                {
-                    InitializeFileSystem(comp.RootDirectory);
-                }
-
-                _commandManager.SetState(comp.RootDirectory, comp.CurrentPath ?? "/");
+                var message = new CommandConsoleLoadStateMessage();
+                _userInterface?.SendMessage(message);
             }
         }
 

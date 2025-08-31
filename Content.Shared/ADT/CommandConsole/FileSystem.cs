@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using Robust.Shared.Serialization;
 
 namespace Content.Shared.ADT.CommandConsole;
 
 // Абстрактный базовый класс для файловой системы
-[DataDefinition]
+[DataDefinition, Serializable, NetSerializable]
 public abstract partial class FileNode
 {
     [DataField(required: true)]
@@ -20,7 +21,7 @@ public abstract partial class FileNode
 }
 
 // Файл
-[DataDefinition]
+[DataDefinition, Serializable, NetSerializable]
 public sealed partial class File : FileNode
 {
     [DataField]
@@ -28,7 +29,7 @@ public sealed partial class File : FileNode
 }
 
 // Директория
-[DataDefinition]
+[DataDefinition, Serializable, NetSerializable]
 public sealed partial class Directory : FileNode
 {
     [DataField]
