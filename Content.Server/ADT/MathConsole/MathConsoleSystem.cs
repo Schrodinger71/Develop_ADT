@@ -91,7 +91,7 @@ public sealed partial class MathConsoleSystem : EntitySystem
 
     private (string equation, string answer) GenerateRandomEquation()
     {
-        var equationType = _random.Next(4); // 0: линейное, 1: квадратное, 2: кубическое, 3: геометрическое
+        var equationType = _random.Next(6); // 0: линейное, 1: квадратное, 2: кубическое, 3: геометрическое, 4: интеграл, 5: дифференциальное
 
         return equationType switch
         {
@@ -99,6 +99,8 @@ public sealed partial class MathConsoleSystem : EntitySystem
             1 => GenerateQuadraticEquation(),
             2 => GenerateCubicEquation(),
             3 => GenerateGeometricEquation(),
+            4 => GenerateIntegralEquation(),
+            5 => GenerateDifferentialEquation(),
             _ => GenerateLinearEquation()
         };
     }
@@ -195,6 +197,153 @@ public sealed partial class MathConsoleSystem : EntitySystem
 
         var equation = $"Площадь треугольника = 0.5 × {baseLength} × h = {area}, h = ?";
         var answer = height.ToString();
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateIntegralEquation()
+    {
+        var integralType = _random.Next(4); // 0: степенная функция, 1: тригонометрическая, 2: экспоненциальная, 3: рациональная
+
+        return integralType switch
+        {
+            0 => GeneratePowerIntegral(),
+            1 => GenerateTrigIntegral(),
+            2 => GenerateExpIntegral(),
+            3 => GenerateRationalIntegral(),
+            _ => GeneratePowerIntegral()
+        };
+    }
+
+    private (string equation, string answer) GeneratePowerIntegral()
+    {
+        var power = _random.Next(2, 6);
+        var coefficient = _random.Next(1, 5);
+        var lowerBound = _random.Next(0, 3);
+        var upperBound = _random.Next(lowerBound + 1, lowerBound + 4);
+
+        // ∫(coefficient * x^power)dx от lowerBound до upperBound
+        var result = coefficient * (Math.Pow(upperBound, power + 1) - Math.Pow(lowerBound, power + 1)) / (power + 1);
+
+        var equation = $"∫{coefficient}x^{power}dx от {lowerBound} до {upperBound} = ?";
+        var answer = result.ToString("F2");
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateTrigIntegral()
+    {
+        var trigType = _random.Next(2); // 0: sin, 1: cos
+        var coefficient = _random.Next(1, 4);
+        var lowerBound = 0;
+        var upperBound = _random.Next(1, 4);
+
+        if (trigType == 0)
+        {
+            // ∫sin(x)dx = -cos(x)
+            var result = coefficient * (-Math.Cos(upperBound) + Math.Cos(lowerBound));
+            var equation = $"∫{coefficient}sin(x)dx от {lowerBound} до {upperBound} = ?";
+            var answer = result.ToString("F2");
+            return (equation, answer);
+        }
+        else
+        {
+            // ∫cos(x)dx = sin(x)
+            var result = coefficient * (Math.Sin(upperBound) - Math.Sin(lowerBound));
+            var equation = $"∫{coefficient}cos(x)dx от {lowerBound} до {upperBound} = ?";
+            var answer = result.ToString("F2");
+            return (equation, answer);
+        }
+    }
+
+    private (string equation, string answer) GenerateExpIntegral()
+    {
+        var coefficient = _random.Next(1, 4);
+        var lowerBound = 0;
+        var upperBound = _random.Next(1, 4);
+
+        // ∫e^x dx = e^x
+        var result = coefficient * (Math.Exp(upperBound) - Math.Exp(lowerBound));
+
+        var equation = $"∫{coefficient}e^x dx от {lowerBound} до {upperBound} = ?";
+        var answer = result.ToString("F2");
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateRationalIntegral()
+    {
+        var coefficient = _random.Next(1, 4);
+        var lowerBound = _random.Next(1, 4);
+        var upperBound = _random.Next(lowerBound + 1, lowerBound + 4);
+
+        // ∫(1/x)dx = ln(x)
+        var result = coefficient * (Math.Log(upperBound) - Math.Log(lowerBound));
+
+        var equation = $"∫{coefficient}/x dx от {lowerBound} до {upperBound} = ?";
+        var answer = result.ToString("F2");
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateDifferentialEquation()
+    {
+        var diffType = _random.Next(3); // 0: простое разделение переменных, 1: линейное первого порядка, 2: однородное
+
+        return diffType switch
+        {
+            0 => GenerateSeparableDifferential(),
+            1 => GenerateLinearFirstOrderDifferential(),
+            2 => GenerateHomogeneousDifferential(),
+            _ => GenerateSeparableDifferential()
+        };
+    }
+
+    private (string equation, string answer) GenerateSeparableDifferential()
+    {
+        var coefficient = _random.Next(1, 4);
+        var initialValue = _random.Next(1, 4);
+        var xValue = _random.Next(2, 5);
+
+        // dy/dx = coefficient * y, y(0) = initialValue
+        // Решение: y = initialValue * e^(coefficient * x)
+        var result = initialValue * Math.Exp(coefficient * xValue);
+
+        var equation = $"dy/dx = {coefficient}y, y(0) = {initialValue}, y({xValue}) = ?";
+        var answer = result.ToString("F2");
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateLinearFirstOrderDifferential()
+    {
+        var a = _random.Next(1, 4);
+        var b = _random.Next(1, 4);
+        var initialValue = _random.Next(1, 4);
+        var xValue = _random.Next(1, 4);
+
+        // dy/dx + ay = b, y(0) = initialValue
+        // Решение: y = (b/a) + (initialValue - b/a) * e^(-a*x)
+        var result = (b / (double)a) + (initialValue - (b / (double)a)) * Math.Exp(-a * xValue);
+
+        var equation = $"dy/dx + {a}y = {b}, y(0) = {initialValue}, y({xValue}) = ?";
+        var answer = result.ToString("F2");
+
+        return (equation, answer);
+    }
+
+    private (string equation, string answer) GenerateHomogeneousDifferential()
+    {
+        var coefficient = _random.Next(1, 4);
+        var initialValue = _random.Next(1, 4);
+        var xValue = _random.Next(1, 4);
+
+        // dy/dx = coefficient * y/x, y(1) = initialValue
+        // Решение: y = initialValue * x^coefficient
+        var result = initialValue * Math.Pow(xValue, coefficient);
+
+        var equation = $"dy/dx = {coefficient}y/x, y(1) = {initialValue}, y({xValue}) = ?";
+        var answer = result.ToString("F2");
 
         return (equation, answer);
     }
