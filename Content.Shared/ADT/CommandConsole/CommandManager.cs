@@ -18,6 +18,9 @@ namespace Content.Shared.ADT.CommandConsole
 
         public CommandManager()
         {
+            // Инициализируем текущую директорию как корневую
+            _currentDirectory = _rootDirectory;
+
             RegisterCommand("echo", Echo);
             RegisterCommand("help", Help);
             RegisterCommand("clear", Clear);
@@ -115,7 +118,14 @@ namespace Content.Shared.ADT.CommandConsole
         {
             _rootDirectory = root;
             _currentPath = currentPath;
-            _currentDirectory = FindDirectoryByPath(currentPath) ?? _rootDirectory;
+            _currentDirectory = FindDirectoryByPath(currentPath);
+
+            // Если не удалось найти директорию по пути, используем корневую
+            if (_currentDirectory == null)
+            {
+                _currentDirectory = _rootDirectory;
+                _currentPath = "/";
+            }
         }
 
         private Directory? FindDirectoryByPath(string path)
@@ -200,6 +210,8 @@ namespace Content.Shared.ADT.CommandConsole
             if (args.Length == 0) return "Usage: cd <dir>";
 
             var target = args[0];
+
+            // Обработка cd ..
             if (target == "..")
             {
                 if (_currentDirectory?.Parent != null)
@@ -210,7 +222,33 @@ namespace Content.Shared.ADT.CommandConsole
                 return _currentPath;
             }
 
-            if (_currentDirectory == null) return "No current directory.";
+            // Обработка cd /
+            if (target == "/")
+            {
+                _currentDirectory = _rootDirectory;
+                _currentPath = "/";
+                return _currentPath;
+            }
+
+            // Обработка абсолютного пути
+            if (target.StartsWith("/"))
+            {
+                var targetDir = FindDirectoryByPath(target);
+                if (targetDir != null)
+                {
+                    _currentDirectory = targetDir;
+                    _currentPath = targetDir.GetPath();
+                    return _currentPath;
+                }
+                return $"Directory '{target}' not found.";
+            }
+
+            // Обработка относительного пути
+            if (_currentDirectory == null)
+            {
+                _currentDirectory = _rootDirectory;
+                _currentPath = "/";
+            }
 
             if (_currentDirectory.Get(target) is Directory dir)
             {
