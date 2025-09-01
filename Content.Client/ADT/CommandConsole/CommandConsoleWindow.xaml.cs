@@ -26,6 +26,7 @@ using Robust.Shared.Map;
 using Robust.Shared.Maths;
 using Robust.Shared.ViewVariables;
 using Robust.Shared.Input;
+using Robust.Shared.Maths;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -56,8 +57,13 @@ namespace Content.Client.ADT.CommandConsole
 
                 var output = ProcessCommands(input);
 
-                var currentOutput = OutputLabel.Text;
-                OutputLabel.Text = currentOutput + output + "\n";
+                var formatted = new FormattedMessage();
+                formatted.PushColor(Color.Lime);
+                formatted.AddText(output);
+                formatted.Pop();
+
+                var currentText = OutputLabel.Text;
+                OutputLabel.Text = currentText + output;
 
                 UpdateComponentState();
 
@@ -75,8 +81,13 @@ namespace Content.Client.ADT.CommandConsole
 
                     var output = ProcessCommands(input);
 
-                    var currentOutput = OutputLabel.Text;
-                    OutputLabel.Text = currentOutput + output + "\n";
+                    var formatted = new FormattedMessage();
+                    formatted.PushColor(Color.Lime);
+                    formatted.AddText(output);
+                    formatted.Pop();
+
+                    var currentText = OutputLabel.Text;
+                    OutputLabel.Text = currentText + output;
 
                     UpdateComponentState();
 
@@ -148,19 +159,22 @@ namespace Content.Client.ADT.CommandConsole
 ║                                                              ║
 ║  Initializing secure terminal session...                    ║
 ║  Station: NSS Exodus                                         ║
-║  Security clearance level: GENERAL ACCESS                   ║
+║  Security clearance level: ROOT ACCESS                      ║
 ║                                                              ║
 ║  [ OK ] System Kernel Loaded                                 ║
 ║  [ OK ] Virtual File System Initialized                     ║
 ║  [ OK ] Networking Stack Initialized                        ║
 ║  [ OK ] Security Module Active                              ║
 ║  [ OK ] User Session Created                                ║
+║  [ OK ] Schrodinger.inc System Loaded                       ║
 ║                                                              ║
 ║  > Type 'help' to get started.                              ║
 ╚══════════════════════════════════════════════════════════════╝";
 
             var formatted = new FormattedMessage();
+            formatted.PushColor(Color.Lime);
             formatted.AddText(firstContent + "\n");
+            formatted.Pop();
             OutputLabel.SetMessage(formatted);
 
             UpdateComponentState();
@@ -189,6 +203,16 @@ namespace Content.Client.ADT.CommandConsole
             // Анимация индикаторов ресурсов
             // TODO: Implement resource animation when needed
             // For now, this is a placeholder
+
+            // Инициализируем процессы
+            var processes = @"• Terminal Session
+• File System
+• Network Stack
+• Security Module
+• Command Processor
+• Device Manager";
+
+            ProcessesLabel.Text = processes;
         }
 
         public override void Close()
@@ -211,8 +235,8 @@ namespace Content.Client.ADT.CommandConsole
         {
             if (response.Success)
             {
-                var currentOutput = OutputLabel.Text;
-                OutputLabel.Text = currentOutput + response.Output + "\n";
+                var currentText = OutputLabel.Text;
+                OutputLabel.Text = currentText + response.Output + "\n";
             }
         }
 
@@ -283,8 +307,8 @@ namespace Content.Client.ADT.CommandConsole
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝";
 
-            var currentOutput = OutputLabel.Text;
-            OutputLabel.Text = currentOutput + helpText + "\n";
+            var currentText = OutputLabel.Text;
+            OutputLabel.Text = currentText + helpText + "\n";
         }
 
         // Изначальная файловая система. TODO:
