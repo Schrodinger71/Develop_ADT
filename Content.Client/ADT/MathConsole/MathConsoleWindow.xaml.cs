@@ -31,7 +31,6 @@ public class CoordinateGridControl : Control
     {
         currentEquation = equation;
         ExtractPointsFromEquation(equation);
-        // Показываем линии для задач с двумя точками
         showLines = points.Count == 2;
         InvalidateMeasure();
     }
@@ -50,90 +49,87 @@ public class CoordinateGridControl : Control
 
     protected override Vector2 MeasureOverride(Vector2 availableSize)
     {
-        return new Vector2(GridSize * CellSize, GridSize * CellSize);
+        var maxSize = Math.Min(availableSize.X, availableSize.Y);
+        var gridSize = Math.Min(maxSize, GridSize * CellSize);
+        return new Vector2(gridSize, gridSize);
     }
 
     protected override void Draw(DrawingHandleScreen handle)
     {
         var size = Size;
-        var centerX = size.X / 2;
-        var centerY = size.Y / 2;
+        var gridSize = Math.Min(size.X, size.Y);
+        var cellSize = gridSize / GridSize;
 
         // Рисуем сетку
         for (int i = 0; i <= GridSize; i++)
         {
-            var pos = i * CellSize;
+            var pos = i * cellSize;
 
             // Вертикальные линии
-            if (i == GridSize / 2) // Центральная линия Y
+            if (i == GridSize / 2)
             {
-                handle.DrawLine(new Vector2(pos, 0), new Vector2(pos, size.Y), Color.Yellow);
+                handle.DrawLine(new Vector2(pos, 0), new Vector2(pos, gridSize), Color.Yellow);
             }
             else
             {
-                handle.DrawLine(new Vector2(pos, 0), new Vector2(pos, size.Y), Color.Gray);
+                handle.DrawLine(new Vector2(pos, 0), new Vector2(pos, gridSize), Color.Gray);
             }
 
             // Горизонтальные линии
-            if (i == GridSize / 2) // Центральная линия X
+            if (i == GridSize / 2)
             {
-                handle.DrawLine(new Vector2(0, pos), new Vector2(size.X, pos), Color.Yellow);
+                handle.DrawLine(new Vector2(0, pos), new Vector2(gridSize, pos), Color.Yellow);
             }
             else
             {
-                handle.DrawLine(new Vector2(0, pos), new Vector2(size.X, pos), Color.Gray);
+                handle.DrawLine(new Vector2(0, pos), new Vector2(gridSize, pos), Color.Gray);
             }
         }
 
-        // Рисуем линии между точками (если есть две точки)
+        // Рисуем линии между точками
         if (showLines && points.Count == 2)
         {
             var point1 = points[0];
             var point2 = points[1];
 
-            var gridX1 = (point1.x + GridSize / 2) * CellSize;
-            var gridY1 = (GridSize / 2 - point1.y) * CellSize;
-            var gridX2 = (point2.x + GridSize / 2) * CellSize;
-            var gridY2 = (GridSize / 2 - point2.y) * CellSize;
+            var gridX1 = (point1.x + GridSize / 2) * cellSize;
+            var gridY1 = (GridSize / 2 - point1.y) * cellSize;
+            var gridX2 = (point2.x + GridSize / 2) * cellSize;
+            var gridY2 = (GridSize / 2 - point2.y) * cellSize;
 
-            // Используем алгоритм Коэна-Сазерленда для обрезки линии
             var startPoint = new Vector2(gridX1, gridY1);
             var endPoint = new Vector2(gridX2, gridY2);
 
-            var clippedStart = ClipLineToBounds(startPoint, endPoint, size);
-            var clippedEnd = ClipLineToBounds(endPoint, startPoint, size);
+            var clippedStart = ClipLineToBounds(startPoint, endPoint, new Vector2(gridSize, gridSize));
+            var clippedEnd = ClipLineToBounds(endPoint, startPoint, new Vector2(gridSize, gridSize));
 
             if (clippedStart.HasValue && clippedEnd.HasValue)
             {
-                handle.DrawLine(clippedStart.Value, clippedEnd.Value, new Color(224, 102, 255)); // Фиолетовый
+                handle.DrawLine(clippedStart.Value, clippedEnd.Value, new Color(224, 102, 255));
             }
         }
 
         // Рисуем точки
-        foreach (var point in points)
+        for (int i = 0; i < points.Count; i++)
         {
-            // Преобразуем координаты точки в координаты экрана
-            // Центр сетки находится в (GridSize/2, GridSize/2)
-            var gridX = (point.x + GridSize / 2) * CellSize;
-            var gridY = (GridSize / 2 - point.y) * CellSize; // Инвертируем Y для правильной ориентации
+            var point = points[i];
+            var gridX = (point.x + GridSize / 2) * cellSize;
+            var gridY = (GridSize / 2 - point.y) * cellSize;
 
-            if (gridX >= 0 && gridX < size.X && gridY >= 0 && gridY < size.Y)
+            if (gridX >= 0 && gridX < gridSize && gridY >= 0 && gridY < gridSize)
             {
-                // Рисуем круг для точки
-                handle.DrawCircle(new Vector2(gridX, gridY), 4, new Color(224, 102, 255)); // Фиолетовый
+                handle.DrawCircle(new Vector2(gridX, gridY), 4, new Color(224, 102, 255));
             }
         }
     }
 
     private Vector2? ClipLineToBounds(Vector2 start, Vector2 end, Vector2 bounds)
     {
-        // Алгоритм Коэна-Сазерленда для обрезки линий
         var x1 = start.X;
         var y1 = start.Y;
         var x2 = end.X;
         var y2 = end.Y;
 
-        // Коды областей
         var code1 = GetRegionCode(x1, y1, bounds);
         var code2 = GetRegionCode(x2, y2, bounds);
 
@@ -143,44 +139,39 @@ public class CoordinateGridControl : Control
         {
             if ((code1 | code2) == 0)
             {
-                // Обе точки внутри - принимаем
                 accept = true;
                 break;
             }
             else if ((code1 & code2) != 0)
             {
-                // Обе точки снаружи в одной области - отбрасываем
                 break;
             }
             else
             {
-                // Выбираем точку снаружи
                 var codeOut = code1 != 0 ? code1 : code2;
                 double x, y;
 
-                // Находим точку пересечения
-                if ((codeOut & 1) != 0) // Слева
+                if ((codeOut & 1) != 0)
                 {
                     x = 0;
                     y = y1 + (y2 - y1) * (0 - x1) / (x2 - x1);
                 }
-                else if ((codeOut & 2) != 0) // Справа
+                else if ((codeOut & 2) != 0)
                 {
                     x = bounds.X;
                     y = y1 + (y2 - y1) * (bounds.X - x1) / (x2 - x1);
                 }
-                else if ((codeOut & 4) != 0) // Снизу
+                else if ((codeOut & 4) != 0)
                 {
                     y = 0;
                     x = x1 + (x2 - x1) * (0 - y1) / (y2 - y1);
                 }
-                else // Сверху
+                else
                 {
                     y = bounds.Y;
                     x = x1 + (x2 - x1) * (bounds.Y - y1) / (y2 - y1);
                 }
 
-                // Заменяем внешнюю точку
                 if (codeOut == code1)
                 {
                     x1 = (float)x;
@@ -207,10 +198,10 @@ public class CoordinateGridControl : Control
     private int GetRegionCode(double x, double y, Vector2 bounds)
     {
         var code = 0;
-        if (x < 0) code |= 1;      // Слева
-        if (x > bounds.X) code |= 2; // Справа
-        if (y < 0) code |= 4;      // Снизу
-        if (y > bounds.Y) code |= 8; // Сверху
+        if (x < 0) code |= 1;
+        if (x > bounds.X) code |= 2;
+        if (y < 0) code |= 4;
+        if (y > bounds.Y) code |= 8;
         return code;
     }
 
@@ -218,7 +209,6 @@ public class CoordinateGridControl : Control
     {
         points.Clear();
 
-        // Ищем координаты в различных форматах
         var patterns = new[]
         {
             @"A\((-?\d+),\s*(-?\d+)\)",
@@ -255,13 +245,15 @@ public partial class MathConsoleWindow : FancyWindow
     private PanelContainer CoordinateGridContainer;
     private CoordinateGridControl CoordinateGrid;
     private Label TotalPointsLabel;
+    private Label CalculatorResult;
 
-    // Новые элементы UI
     private Label EquationsSolvedLabel;
     private Label AccuracyRateLabel;
     private Label AverageTimeLabel;
     private Label DifficultyLevelLabel;
-    private BoxContainer AchievementsList;
+
+    private string currentCalculation = "";
+    private double currentResult = 0;
 
     public event Action<string>? SubmitAnswer;
     public event Action? RequestNewEquation;
@@ -279,24 +271,19 @@ public partial class MathConsoleWindow : FancyWindow
         CoordinateGridContainer = this.FindControl<PanelContainer>("CoordinateGridContainer");
         CoordinateGrid = this.FindControl<CoordinateGridControl>("CoordinateGrid");
         TotalPointsLabel = this.FindControl<Label>("TotalPointsLabel");
+        CalculatorResult = this.FindControl<Label>("CalculatorResult");
 
-        // Новые элементы
         EquationsSolvedLabel = this.FindControl<Label>("EquationsSolvedLabel");
         AccuracyRateLabel = this.FindControl<Label>("AccuracyRateLabel");
         AverageTimeLabel = this.FindControl<Label>("AverageTimeLabel");
         DifficultyLevelLabel = this.FindControl<Label>("DifficultyLevelLabel");
-        AchievementsList = this.FindControl<BoxContainer>("AchievementsList");
 
-        // Привязываем события
         SubmitButton.OnPressed += OnSubmitButtonClick;
         NewEquationButton.OnPressed += OnNewEquationButtonClick;
         AnswerInput.OnTextEntered += OnAnswerInputKeyDown;
 
-        // Фокус на поле ввода
         AnswerInput.GrabKeyboardFocus();
-
-        // Инициализируем достижения
-        InitializeAchievements();
+        InitializeCalculator();
     }
 
     private void InitializeComponent()
@@ -332,26 +319,204 @@ public partial class MathConsoleWindow : FancyWindow
         }
     }
 
+    private void InitializeCalculator()
+    {
+        var buttons = new[] { "C", "=", "±", "√", "x²", "+", "-", "×", "÷", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "." };
+
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            var buttonText = buttons[i];
+            var button = this.FindControl<Button>(buttonText);
+            if (button != null)
+            {
+                if (buttonText == "C")
+                {
+                    button.OnPressed += OnCalculatorClear;
+                }
+                else if (buttonText == "=")
+                {
+                    button.OnPressed += OnCalculatorEquals;
+                }
+                else if (buttonText == "±")
+                {
+                    button.OnPressed += OnCalculatorPlusMinus;
+                }
+                else if (buttonText == "√")
+                {
+                    button.OnPressed += OnCalculatorSqrt;
+                }
+                else if (buttonText == "x²")
+                {
+                    button.OnPressed += OnCalculatorSquare;
+                }
+                else if (IsOperator(buttonText))
+                {
+                    button.OnPressed += OnCalculatorOperator;
+                }
+                else if (IsNumber(buttonText))
+                {
+                    button.OnPressed += OnCalculatorNumber;
+                }
+            }
+        }
+    }
+
+    private bool IsOperator(string text)
+    {
+        return text == "+" || text == "-" || text == "×" || text == "÷";
+    }
+
+    private bool IsNumber(string text)
+    {
+        return text == "0" || text == "1" || text == "2" || text == "3" || text == "4" ||
+               text == "5" || text == "6" || text == "7" || text == "8" || text == "9" || text == ".";
+    }
+
+    private void OnCalculatorNumber(BaseButton.ButtonEventArgs e)
+    {
+        var button = (Button)e.Button;
+        if (button.Text == "." && currentCalculation.Contains("."))
+            return;
+
+        currentCalculation += button.Text;
+        UpdateCalculatorDisplay();
+    }
+
+    private void OnCalculatorOperator(BaseButton.ButtonEventArgs e)
+    {
+        var button = (Button)e.Button;
+        if (!string.IsNullOrEmpty(currentCalculation))
+        {
+            var lastChar = currentCalculation[currentCalculation.Length - 1];
+            if (lastChar != '+' && lastChar != '-' && lastChar != '*' && lastChar != '/')
+            {
+                if (!string.IsNullOrEmpty(button.Text))
+                {
+                    var symbol = button.Text;
+                    if (symbol == "×") symbol = "*";
+                    else if (symbol == "÷") symbol = "/";
+                    currentCalculation += symbol;
+                    UpdateCalculatorDisplay();
+                }
+            }
+        }
+    }
+
+    private void OnCalculatorEquals(BaseButton.ButtonEventArgs e)
+    {
+        try
+        {
+            if (!string.IsNullOrEmpty(currentCalculation))
+            {
+                var expression = currentCalculation.Replace("×", "*").Replace("÷", "/");
+                var result = SimpleEvaluate(expression);
+                currentResult = result;
+                currentCalculation = result.ToString();
+                UpdateCalculatorDisplay();
+            }
+        }
+        catch
+        {
+            currentCalculation = "Error";
+            UpdateCalculatorDisplay();
+        }
+    }
+
+    private double SimpleEvaluate(string expression)
+    {
+        // Простая реализация для базовых операций без сложного парсинга
+        var parts = expression.Split('+', '-', '*', '/');
+        if (parts.Length != 2) return 0;
+
+        var left = double.Parse(parts[0]);
+        var right = double.Parse(parts[1]);
+
+        if (expression.Contains("+")) return left + right;
+        if (expression.Contains("-")) return left - right;
+        if (expression.Contains("*")) return left * right;
+        if (expression.Contains("/")) return right != 0 ? left / right : 0;
+
+        return 0;
+    }
+
+    private void OnCalculatorClear(BaseButton.ButtonEventArgs e)
+    {
+        currentCalculation = "";
+        currentResult = 0;
+        UpdateCalculatorDisplay();
+    }
+
+    private void OnCalculatorPlusMinus(BaseButton.ButtonEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(currentCalculation) && currentCalculation != "0")
+        {
+            if (currentCalculation.StartsWith("-"))
+                currentCalculation = currentCalculation.Substring(1);
+            else
+                currentCalculation = "-" + currentCalculation;
+            UpdateCalculatorDisplay();
+        }
+    }
+
+    private void OnCalculatorSqrt(BaseButton.ButtonEventArgs e)
+    {
+        try
+        {
+            if (double.TryParse(currentCalculation, out var number) && number >= 0)
+            {
+                currentResult = Math.Sqrt(number);
+                currentCalculation = currentResult.ToString();
+                UpdateCalculatorDisplay();
+            }
+        }
+        catch
+        {
+            currentCalculation = "Error";
+            UpdateCalculatorDisplay();
+        }
+    }
+
+    private void OnCalculatorSquare(BaseButton.ButtonEventArgs e)
+    {
+        try
+        {
+            if (double.TryParse(currentCalculation, out var number))
+            {
+                currentResult = number * number;
+                currentCalculation = currentResult.ToString();
+                UpdateCalculatorDisplay();
+            }
+        }
+        catch
+        {
+            currentCalculation = "Error";
+            UpdateCalculatorDisplay();
+        }
+    }
+
+    private void UpdateCalculatorDisplay()
+    {
+        CalculatorResult.Text = string.IsNullOrEmpty(currentCalculation) ? "0" : currentCalculation;
+    }
+
     public void UpdateState(MathConsoleState state)
     {
         CurrentEquationText.Text = state.CurrentEquation;
         TotalPointsLabel.Text = state.TotalPointsEarned.ToString();
 
-        // Обновляем статистику
         UpdateStatistics(state.Records);
-
-        // Проверяем, нужно ли показать координатную сетку
         ShowCoordinateGridIfNeeded(state.CurrentEquation);
 
         RecordsList.RemoveAllChildren();
-        foreach (var record in state.Records.OrderByDescending(r => r.SolvedAt))
+        var orderedRecords = state.Records.OrderByDescending(r => r.SolvedAt).ToList();
+        for (int i = 0; i < orderedRecords.Count; i++)
         {
+            var record = orderedRecords[i];
             var recordPanel = new PanelContainer();
             recordPanel.PanelOverride = new StyleBoxFlat { BackgroundColor = new Color(0, 0, 0, 0.3f) };
 
             var recordBox = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, Margin = new Thickness(5) };
 
-            // Уравнение
             var equationLabel = new Label
             {
                 Text = record.Equation,
@@ -360,32 +525,26 @@ public partial class MathConsoleWindow : FancyWindow
             };
             recordBox.AddChild(equationLabel);
 
-            // Ответ и информация
             var infoBox = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, HorizontalExpand = true };
-            infoBox.AddChild(new Label { Text = $"Ответ: {record.Answer}", FontColorOverride = new Color(224, 102, 255) });
-            infoBox.AddChild(new Label { Text = $"Игрок: {record.EntityName}", FontColorOverride = new Color(224, 102, 255), HorizontalExpand = true });
-            infoBox.AddChild(new Label { Text = $"+{record.PointsEarned} очков", FontColorOverride = new Color(224, 102, 255) });
+            infoBox.AddChild(new Label { Text = $"Ответ: {record.Answer}", FontColorOverride = new Color(218, 112, 214) });
+            infoBox.AddChild(new Label { Text = $"Игрок: {record.EntityName}", FontColorOverride = new Color(218, 112, 214), HorizontalExpand = true });
+            infoBox.AddChild(new Label { Text = $"+{record.PointsEarned} очков", FontColorOverride = new Color(218, 112, 214) });
 
             recordBox.AddChild(infoBox);
             recordPanel.AddChild(recordBox);
-
             RecordsList.AddChild(recordPanel);
         }
     }
 
     private void UpdateStatistics(List<MathConsoleRecord> records)
     {
-        // Количество решенных уравнений
         EquationsSolvedLabel.Text = records.Count.ToString();
 
-        // Точность (пока просто 100% для демонстрации)
         var accuracy = records.Count > 0 ? 100 : 0;
         AccuracyRateLabel.Text = $"{accuracy}%";
 
-        // Среднее время (пока просто "0s" для демонстрации)
         AverageTimeLabel.Text = "0s";
 
-        // Уровень сложности
         var totalPoints = records.Sum(r => r.PointsEarned);
         var difficulty = totalPoints switch
         {
@@ -398,54 +557,8 @@ public partial class MathConsoleWindow : FancyWindow
         DifficultyLevelLabel.Text = difficulty;
     }
 
-    private void InitializeAchievements()
-    {
-        AchievementsList.RemoveAllChildren();
-
-        // Добавляем достижения
-        var achievements = new[]
-        {
-            ("🏆 Мастер математики", "Решите 50 уравнений", false),
-            ("⚡ Быстрый решатель", "Решите 10 уравнений за 5 минут", false),
-            ("📐 Эксперт геометрии", "Решите 20 геометрических задач", false),
-            ("🧮 Калькулятор", "Решите 100 уравнений", false),
-            ("🎯 Точность", "Достигните 95% точности", false)
-        };
-
-        foreach (var (name, description, unlocked) in achievements)
-        {
-            var achievementPanel = new PanelContainer();
-            achievementPanel.PanelOverride = new StyleBoxFlat
-            {
-                BackgroundColor = unlocked ? new Color(218, 112, 214, 0.2f) : new Color(0, 0, 0, 0.3f)
-            };
-
-            var achievementBox = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, Margin = new Thickness(5) };
-
-            var nameLabel = new Label
-            {
-                Text = name,
-                FontColorOverride = unlocked ? new Color(218, 112, 214) : new Color(128, 128, 128),
-                HorizontalExpand = true
-            };
-            achievementBox.AddChild(nameLabel);
-
-            var descLabel = new Label
-            {
-                Text = description,
-                FontColorOverride = unlocked ? new Color(218, 112, 214) : new Color(100, 100, 100),
-                HorizontalExpand = true
-            };
-            achievementBox.AddChild(descLabel);
-
-            achievementPanel.AddChild(achievementBox);
-            AchievementsList.AddChild(achievementPanel);
-        }
-    }
-
     private void ShowCoordinateGridIfNeeded(string equation)
     {
-        // Показываем координатную сетку для задач с координатной геометрией
         var isCoordinateTask = equation.Contains("точками") ||
                               equation.Contains("расстояние") ||
                               equation.Contains("середину") ||

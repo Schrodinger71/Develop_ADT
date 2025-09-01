@@ -31,8 +31,8 @@
                 <!-- Основная панель -->
                 <BoxContainer Orientation="Horizontal" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="15">
 
-                    <!-- Левая панель - Статистика -->
-                    <BoxContainer Orientation="Vertical" MinWidth="250" MaxWidth="250" VerticalExpand="True" SeparationOverride="12">
+                    <!-- Левая панель - Статистика и координатная сетка -->
+                    <BoxContainer Orientation="Vertical" MinWidth="400" MaxWidth="400" VerticalExpand="True" SeparationOverride="12">
 
                         <!-- Статистика -->
                         <PanelContainer VerticalExpand="False">
@@ -65,24 +65,27 @@
                             </BoxContainer>
                         </PanelContainer>
 
-                        <!-- Достижения -->
-                        <PanelContainer VerticalExpand="True">
+                        <!-- Координатная сетка -->
+                        <PanelContainer Name="CoordinateGridContainer" VerticalExpand="True" Visible="False">
                             <PanelContainer.PanelOverride>
                                 <gfx:StyleBoxFlat BorderColor="#da70d6" BorderThickness="2"/>
                             </PanelContainer.PanelOverride>
                             <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
 
-                                <Label Text="{Loc 'mathconsole-achievements'}" StyleClasses="ConsoleSubHeading" FontColorOverride="#da70d6" HorizontalAlignment="Center"/>
-
-                                <ScrollContainer HorizontalExpand="True" VerticalExpand="True">
-                                    <BoxContainer Name="AchievementsList" Orientation="Vertical" SeparationOverride="5"/>
-                                </ScrollContainer>
+                                <Label Text="{Loc 'mathconsole-coordinate-grid'}" StyleClasses="ConsoleSubHeading" FontColorOverride="#da70d6" HorizontalAlignment="Center"/>
+                                <Label Text="{Loc 'mathconsole-coordinate-grid-desc'}" FontColorOverride="#e6e6fa" HorizontalAlignment="Center" Margin="0 0 0 5"/>
+                                <PanelContainer StyleClasses="PdaContentBackground" VerticalExpand="True" HorizontalExpand="True" MinHeight="300">
+                                    <local:CoordinateGridControl Name="CoordinateGrid"
+                                                                 HorizontalExpand="True"
+                                                                 VerticalExpand="True"
+                                                                 Margin="5"/>
+                                </PanelContainer>
                             </BoxContainer>
                         </PanelContainer>
 
                     </BoxContainer>
 
-                    <!-- Центральная панель с уравнением и координатной сеткой -->
+                    <!-- Центральная панель с уравнением и калькулятором -->
                     <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="12">
 
                         <!-- Панель с текущим уравнением -->
@@ -103,21 +106,55 @@
                             </BoxContainer>
                         </PanelContainer>
 
-                        <!-- Координатная сетка -->
-                        <PanelContainer Name="CoordinateGridContainer" VerticalExpand="True" Visible="False">
+                        <!-- Калькулятор -->
+                        <PanelContainer VerticalExpand="True">
                             <PanelContainer.PanelOverride>
                                 <gfx:StyleBoxFlat BorderColor="#da70d6" BorderThickness="2"/>
                             </PanelContainer.PanelOverride>
-                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+                            <BoxContainer Orientation="Vertical" SeparationOverride="10" Margin="10">
 
-                                <Label Text="{Loc 'mathconsole-coordinate-grid'}" StyleClasses="ConsoleSubHeading" FontColorOverride="#da70d6" HorizontalAlignment="Center"/>
-                                <Label Text="{Loc 'mathconsole-coordinate-grid-desc'}" FontColorOverride="#e6e6fa" HorizontalAlignment="Center" Margin="0 0 0 5"/>
-                                <PanelContainer StyleClasses="PdaContentBackground" VerticalExpand="True" HorizontalExpand="True">
-                                    <local:CoordinateGridControl Name="CoordinateGrid"
-                                                                 HorizontalExpand="True"
-                                                                 VerticalExpand="True"
-                                                                 Margin="5"/>
-                                </PanelContainer>
+                                <Label Text="{Loc 'mathconsole-calculator'}" StyleClasses="ConsoleSubHeading" FontColorOverride="#da70d6" HorizontalAlignment="Center"/>
+                                <Label Text="{Loc 'mathconsole-calculator-desc'}" FontColorOverride="#e6e6fa" HorizontalAlignment="Center" Margin="0 0 0 5"/>
+
+                                <!-- Кнопки калькулятора -->
+                                <BoxContainer Orientation="Vertical" SeparationOverride="5" Margin="0 10 0 0">
+                                    <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+                                        <Button Name="7" Text="7" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="8" Text="8" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="9" Text="9" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="÷" Text="÷" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                    </BoxContainer>
+                                    <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+                                        <Button Name="4" Text="4" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="5" Text="5" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="6" Text="6" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="×" Text="×" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                    </BoxContainer>
+                                    <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+                                        <Button Name="1" Text="1" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="2" Text="2" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="3" Text="3" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="-" Text="-" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                    </BoxContainer>
+                                    <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+                                        <Button Name="0" Text="0" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="." Text="." StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="=" Text="=" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="+" Text="+" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                    </BoxContainer>
+                                    <BoxContainer Orientation="Horizontal" SeparationOverride="5">
+                                        <Button Name="C" Text="C" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="√" Text="√" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="x²" Text="x²" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                        <Button Name="±" Text="±" StyleClasses="MonotoneButton" MinSize="50,40" MaxSize="50,40"/>
+                                    </BoxContainer>
+                                </BoxContainer>
+
+                                <!-- Результат калькулятора -->
+                                <BoxContainer Orientation="Vertical" Margin="0 10 0 0">
+                                    <Label Text="{Loc 'mathconsole-calculator-result'}" FontColorOverride="#e6e6fa" HorizontalAlignment="Center"/>
+                                    <Label Name="CalculatorResult" Text="0" FontColorOverride="#da70d6" HorizontalAlignment="Center" StyleClasses="LabelBig"/>
+                                </BoxContainer>
                             </BoxContainer>
                         </PanelContainer>
 
@@ -157,7 +194,7 @@
 
                     </BoxContainer>
 
-                    <!-- Правая панель с историей и справкой -->
+                    <!-- Правая панель с историей и подсказками -->
                     <BoxContainer Orientation="Vertical" MinWidth="350" MaxWidth="350" VerticalExpand="True" SeparationOverride="12">
 
                         <!-- Общие очки -->
@@ -172,25 +209,6 @@
                             </BoxContainer>
                         </PanelContainer>
 
-                        <!-- Справка -->
-                        <PanelContainer VerticalExpand="False">
-                            <PanelContainer.PanelOverride>
-                                <gfx:StyleBoxFlat BorderColor="#da70d6" BorderThickness="2"/>
-                            </PanelContainer.PanelOverride>
-                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
-
-                                <Label Text="{Loc 'mathconsole-help-panel'}" StyleClasses="ConsoleSubHeading" FontColorOverride="#da70d6" HorizontalAlignment="Center"/>
-                                <Label Text="{Loc 'mathconsole-help-title'}" FontColorOverride="#e6e6fa" HorizontalAlignment="Center" Margin="0 5 0 0"/>
-
-                                <BoxContainer Orientation="Vertical" SeparationOverride="3" Margin="0 5 0 0">
-                                    <Label Text="{Loc 'mathconsole-help-linear'}" FontColorOverride="#e6e6fa"/>
-                                    <Label Text="{Loc 'mathconsole-help-quadratic'}" FontColorOverride="#e6e6fa"/>
-                                    <Label Text="{Loc 'mathconsole-help-geometry'}" FontColorOverride="#e6e6fa"/>
-                                    <Label Text="{Loc 'mathconsole-help-calculus'}" FontColorOverride="#e6e6fa"/>
-                                </BoxContainer>
-                            </BoxContainer>
-                        </PanelContainer>
-
                         <!-- История решений -->
                         <PanelContainer VerticalExpand="True">
                             <PanelContainer.PanelOverride>
@@ -202,6 +220,29 @@
 
                                 <ScrollContainer HorizontalExpand="True" VerticalExpand="True">
                                     <BoxContainer Name="RecordsList" Orientation="Vertical" SeparationOverride="5"/>
+                                </ScrollContainer>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- Справка по форматам ответов -->
+                        <PanelContainer VerticalExpand="True">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#da70d6" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+
+                                <Label Text="{Loc 'mathconsole-answer-format-help'}" StyleClasses="ConsoleSubHeading" FontColorOverride="#da70d6" HorizontalAlignment="Center"/>
+                                <Label Text="{Loc 'mathconsole-answer-format-title'}" FontColorOverride="#e6e6fa" HorizontalAlignment="Center" Margin="0 5 0 0"/>
+
+                                <ScrollContainer HorizontalExpand="True" VerticalExpand="True">
+                                    <BoxContainer Orientation="Vertical" SeparationOverride="3" Margin="0 5 0 0">
+                                        <Label Text="{Loc 'mathconsole-answer-format-linear'}" FontColorOverride="#e6e6fa"/>
+                                        <Label Text="{Loc 'mathconsole-answer-format-quadratic'}" FontColorOverride="#e6e6fa"/>
+                                        <Label Text="{Loc 'mathconsole-answer-format-geometry'}" FontColorOverride="#e6e6fa"/>
+                                        <Label Text="{Loc 'mathconsole-answer-format-coordinates'}" FontColorOverride="#e6e6fa"/>
+                                        <Label Text="{Loc 'mathconsole-answer-format-multiple'}" FontColorOverride="#e6e6fa"/>
+                                        <Label Text="{Loc 'mathconsole-answer-format-text'}" FontColorOverride="#e6e6fa"/>
+                                    </BoxContainer>
                                 </ScrollContainer>
                             </BoxContainer>
                         </PanelContainer>

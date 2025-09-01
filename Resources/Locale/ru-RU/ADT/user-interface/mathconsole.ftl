@@ -7,6 +7,10 @@ mathconsole-solve-equation = Решите уравнение:
 mathconsole-coordinate-grid = COORDINATE GRID
 mathconsole-coordinate-grid-desc = Визуализация координатной геометрии
 
+mathconsole-calculator = CALCULATOR
+mathconsole-calculator-desc = Быстрые вычисления
+mathconsole-calculator-result = Результат:
+
 mathconsole-input-placeholder = Введите ответ...
 mathconsole-submit-answer = ● Submit Answer
 mathconsole-new-equation = ● New Equation
@@ -20,17 +24,14 @@ mathconsole-accuracy-rate = Точность:
 mathconsole-average-time = Среднее время:
 mathconsole-difficulty-level = Сложность:
 
-mathconsole-help-panel = HELP & TIPS
-mathconsole-help-title = Справка по решению
-mathconsole-help-linear = Линейные уравнения: ax + b = c
-mathconsole-help-quadratic = Квадратные: ax² + bx + c = d
-mathconsole-help-geometry = Геометрия: площадь, периметр
-mathconsole-help-calculus = Интегралы и производные
-
-mathconsole-achievements = ACHIEVEMENTS
-mathconsole-achievement-math-master = Мастер математики
-mathconsole-achievement-speed-solver = Быстрый решатель
-mathconsole-achievement-geometry-expert = Эксперт геометрии
+mathconsole-answer-format-help = ANSWER FORMAT HELP
+mathconsole-answer-format-title = Как правильно вводить ответы:
+mathconsole-answer-format-linear = Линейные: x = число (например: 5)
+mathconsole-answer-format-quadratic = Квадратные: x = число (например: -3)
+mathconsole-answer-format-geometry = Геометрия: число (например: 12.5)
+mathconsole-answer-format-coordinates = Координаты: (x,y) (например: (2,-1))
+mathconsole-answer-format-multiple = Несколько ответов: x1,x2 (например: 1,2)
+mathconsole-answer-format-text = Текстовые: да/нет, параллельны, и т.д.
 
 mathconsole-footer-os = ⌨ MATHCONSOLE_OS v2.1
 mathconsole-footer-powered = 📚 Powered by Schrödinger.inc Systems
