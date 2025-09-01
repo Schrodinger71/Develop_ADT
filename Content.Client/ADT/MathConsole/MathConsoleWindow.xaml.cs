@@ -105,7 +105,7 @@ public class CoordinateGridControl : Control
 
             if (clippedStart.HasValue && clippedEnd.HasValue)
             {
-                handle.DrawLine(clippedStart.Value, clippedEnd.Value, Color.Blue);
+                handle.DrawLine(clippedStart.Value, clippedEnd.Value, new Color(224, 102, 255)); // Фиолетовый
             }
         }
 
@@ -120,7 +120,7 @@ public class CoordinateGridControl : Control
             if (gridX >= 0 && gridX < size.X && gridY >= 0 && gridY < size.Y)
             {
                 // Рисуем круг для точки
-                handle.DrawCircle(new Vector2(gridX, gridY), 4, Color.Red);
+                handle.DrawCircle(new Vector2(gridX, gridY), 4, new Color(224, 102, 255)); // Фиолетовый
             }
         }
     }
@@ -256,6 +256,13 @@ public partial class MathConsoleWindow : FancyWindow
     private CoordinateGridControl CoordinateGrid;
     private Label TotalPointsLabel;
 
+    // Новые элементы UI
+    private Label EquationsSolvedLabel;
+    private Label AccuracyRateLabel;
+    private Label AverageTimeLabel;
+    private Label DifficultyLevelLabel;
+    private BoxContainer AchievementsList;
+
     public event Action<string>? SubmitAnswer;
     public event Action? RequestNewEquation;
     public event Action? OnClose;
@@ -273,6 +280,13 @@ public partial class MathConsoleWindow : FancyWindow
         CoordinateGrid = this.FindControl<CoordinateGridControl>("CoordinateGrid");
         TotalPointsLabel = this.FindControl<Label>("TotalPointsLabel");
 
+        // Новые элементы
+        EquationsSolvedLabel = this.FindControl<Label>("EquationsSolvedLabel");
+        AccuracyRateLabel = this.FindControl<Label>("AccuracyRateLabel");
+        AverageTimeLabel = this.FindControl<Label>("AverageTimeLabel");
+        DifficultyLevelLabel = this.FindControl<Label>("DifficultyLevelLabel");
+        AchievementsList = this.FindControl<BoxContainer>("AchievementsList");
+
         // Привязываем события
         SubmitButton.OnPressed += OnSubmitButtonClick;
         NewEquationButton.OnPressed += OnNewEquationButtonClick;
@@ -280,6 +294,9 @@ public partial class MathConsoleWindow : FancyWindow
 
         // Фокус на поле ввода
         AnswerInput.GrabKeyboardFocus();
+
+        // Инициализируем достижения
+        InitializeAchievements();
     }
 
     private void InitializeComponent()
@@ -320,6 +337,9 @@ public partial class MathConsoleWindow : FancyWindow
         CurrentEquationText.Text = state.CurrentEquation;
         TotalPointsLabel.Text = state.TotalPointsEarned.ToString();
 
+        // Обновляем статистику
+        UpdateStatistics(state.Records);
+
         // Проверяем, нужно ли показать координатную сетку
         ShowCoordinateGridIfNeeded(state.CurrentEquation);
 
@@ -342,14 +362,84 @@ public partial class MathConsoleWindow : FancyWindow
 
             // Ответ и информация
             var infoBox = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, HorizontalExpand = true };
-            infoBox.AddChild(new Label { Text = $"Ответ: {record.Answer}", FontColorOverride = Color.Lime });
-            infoBox.AddChild(new Label { Text = $"Игрок: {record.EntityName}", FontColorOverride = Color.Cyan, HorizontalExpand = true });
-            infoBox.AddChild(new Label { Text = $"+{record.PointsEarned} очков", FontColorOverride = Color.Yellow });
+            infoBox.AddChild(new Label { Text = $"Ответ: {record.Answer}", FontColorOverride = new Color(224, 102, 255) });
+            infoBox.AddChild(new Label { Text = $"Игрок: {record.EntityName}", FontColorOverride = new Color(224, 102, 255), HorizontalExpand = true });
+            infoBox.AddChild(new Label { Text = $"+{record.PointsEarned} очков", FontColorOverride = new Color(224, 102, 255) });
 
             recordBox.AddChild(infoBox);
             recordPanel.AddChild(recordBox);
 
             RecordsList.AddChild(recordPanel);
+        }
+    }
+
+    private void UpdateStatistics(List<MathConsoleRecord> records)
+    {
+        // Количество решенных уравнений
+        EquationsSolvedLabel.Text = records.Count.ToString();
+
+        // Точность (пока просто 100% для демонстрации)
+        var accuracy = records.Count > 0 ? 100 : 0;
+        AccuracyRateLabel.Text = $"{accuracy}%";
+
+        // Среднее время (пока просто "0s" для демонстрации)
+        AverageTimeLabel.Text = "0s";
+
+        // Уровень сложности
+        var totalPoints = records.Sum(r => r.PointsEarned);
+        var difficulty = totalPoints switch
+        {
+            < 50 => "Новичок",
+            < 150 => "Ученик",
+            < 300 => "Студент",
+            < 500 => "Магистр",
+            _ => "Профессор"
+        };
+        DifficultyLevelLabel.Text = difficulty;
+    }
+
+    private void InitializeAchievements()
+    {
+        AchievementsList.RemoveAllChildren();
+
+        // Добавляем достижения
+        var achievements = new[]
+        {
+            ("🏆 Мастер математики", "Решите 50 уравнений", false),
+            ("⚡ Быстрый решатель", "Решите 10 уравнений за 5 минут", false),
+            ("📐 Эксперт геометрии", "Решите 20 геометрических задач", false),
+            ("🧮 Калькулятор", "Решите 100 уравнений", false),
+            ("🎯 Точность", "Достигните 95% точности", false)
+        };
+
+        foreach (var (name, description, unlocked) in achievements)
+        {
+            var achievementPanel = new PanelContainer();
+            achievementPanel.PanelOverride = new StyleBoxFlat
+            {
+                BackgroundColor = unlocked ? new Color(218, 112, 214, 0.2f) : new Color(0, 0, 0, 0.3f)
+            };
+
+            var achievementBox = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, Margin = new Thickness(5) };
+
+            var nameLabel = new Label
+            {
+                Text = name,
+                FontColorOverride = unlocked ? new Color(218, 112, 214) : new Color(128, 128, 128),
+                HorizontalExpand = true
+            };
+            achievementBox.AddChild(nameLabel);
+
+            var descLabel = new Label
+            {
+                Text = description,
+                FontColorOverride = unlocked ? new Color(218, 112, 214) : new Color(100, 100, 100),
+                HorizontalExpand = true
+            };
+            achievementBox.AddChild(descLabel);
+
+            achievementPanel.AddChild(achievementBox);
+            AchievementsList.AddChild(achievementPanel);
         }
     }
 
