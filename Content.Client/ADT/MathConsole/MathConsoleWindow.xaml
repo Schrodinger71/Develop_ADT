@@ -1,63 +1,147 @@
-<DefaultWindow xmlns="https://spacestation14.io"
-            xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-            xmlns:local="clr-namespace:Content.Client.ADT.MathConsole"
-            Title="Математическая консоль РНД"
-            MinSize="600 500"
-            x:Class="Content.Client.ADT.MathConsole.MathConsoleWindow">
+<controls:FancyWindow
+    xmlns="https://spacestation14.io"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Content.Client.ADT.MathConsole"
+    xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+    xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
+    Title="{Loc 'mathconsole-window-title'}"
+    MinSize="900 700"
+    x:Class="Content.Client.ADT.MathConsole.MathConsoleWindow">
 
-         <BoxContainer Orientation="Vertical">
-         <Label Text="Математическая консоль РНД"
-                        StyleClasses="LabelHeader"
-                        HorizontalAlignment="Center" />
+    <!-- Фон и границы окна -->
+    <PanelContainer Name="Background" StyleClasses="PdaBackgroundRect" ModulateSelfOverride="#0e0e0eff"/>
+    <PanelContainer Name="Border" StyleClasses="PdaBorderRect"/>
 
-         <PanelContainer StyleClasses="PanelOpen">
-             <BoxContainer Orientation="Vertical">
-                 <Label Text="Решите уравнение:" StyleClasses="LabelHeader" />
-                 <Label Name="CurrentEquationText"
-                                Text="Загрузка..."
-                                StyleClasses="LabelBig"
-                                HorizontalAlignment="Center" />
+    <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True" Margin="10">
 
-                 <!-- Координатная сетка для задач с координатной геометрией -->
-                 <PanelContainer Name="CoordinateGridContainer"
-                                StyleClasses="PanelOpen"
-                                Visible="False"
-                                MinHeight="200">
-                     <BoxContainer Orientation="Vertical">
-                         <Label Text="Координатная сетка:" StyleClasses="LabelHeader" />
-                         <PanelContainer StyleClasses="PanelOpen"
-                                        MinHeight="180"
-                                        HorizontalExpand="True">
-                             <local:CoordinateGridControl Name="CoordinateGrid"
-                                                          HorizontalExpand="True"
-                                                          VerticalExpand="True" />
-                         </PanelContainer>
-                     </BoxContainer>
-                 </PanelContainer>
-             </BoxContainer>
-         </PanelContainer>
+        <!-- Заголовок -->
+        <Label Text="{Loc 'mathconsole-header'}"
+                StyleClasses="ConsoleHeading"
+                HorizontalAlignment="Center" Margin="0 5 0 10"/>
 
-         <BoxContainer Orientation="Horizontal">
-             <LineEdit Name="AnswerInput"
-                               PlaceHolder="Введите ответ..."
-                               HorizontalExpand="True" />
-             <Button Name="SubmitButton"
-                             Text="Ответить"
-                             MinWidth="80" />
-         </BoxContainer>
+        <!-- Основной контент -->
+        <Control Margin="0" RectClipContent="True" VerticalExpand="True" HorizontalExpand="True">
+            <PanelContainer Name="ContentBorder" StyleClasses="PdaBackground"/>
+            <Control Name="MathContentsContainer" Margin="0" Modulate="#ff5e5eff" HorizontalExpand="True" VerticalExpand="True">
 
-         <Button Name="NewEquationButton"
-                         Text="Новое уравнение"
-                         HorizontalAlignment="Center" />
+                <!-- Фон -->
+                <PanelContainer Name="ContentBackground" StyleClasses="PdaContentBackground" HorizontalExpand="True" VerticalExpand="True"/>
 
-         <PanelContainer StyleClasses="PanelOpen">
-             <BoxContainer Orientation="Vertical">
-                 <Label Text="История решений" StyleClasses="LabelHeader" />
-                 <ScrollContainer VerticalExpand="True">
-                     <BoxContainer Name="RecordsList" Orientation="Vertical" />
-                 </ScrollContainer>
-             </BoxContainer>
-         </PanelContainer>
-     </BoxContainer>
+                <!-- Основная панель -->
+                <BoxContainer Orientation="Horizontal" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="20">
 
-</DefaultWindow>
+                    <!-- Левая панель с уравнением и координатной сеткой -->
+                    <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="12">
+
+                        <!-- Панель с текущим уравнением -->
+                        <PanelContainer VerticalExpand="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#FFFFFF" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="10" Margin="10">
+                                <Label Text="{Loc 'mathconsole-current-equation'}" StyleClasses="ConsoleSubHeading" FontColorOverride="cyan" HorizontalAlignment="Center"/>
+                                <Label Text="{Loc 'mathconsole-solve-equation'}" StyleClasses="ConsoleSubHeading" FontColorOverride="lime" HorizontalAlignment="Center"/>
+                                <Label Name="CurrentEquationText"
+                                       Text="Загрузка..."
+                                       StyleClasses="LabelBig"
+                                       FontColorOverride="white"
+                                       HorizontalAlignment="Center"
+                                       Margin="0 10 0 0"/>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- Координатная сетка -->
+                        <PanelContainer Name="CoordinateGridContainer" VerticalExpand="True" Visible="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#FFFFFF" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+                                <Label Text="{Loc 'mathconsole-coordinate-grid'}" StyleClasses="ConsoleSubHeading" FontColorOverride="orange" HorizontalAlignment="Center"/>
+                                <Label Text="{Loc 'mathconsole-coordinate-grid-desc'}" FontColorOverride="silver" HorizontalAlignment="Center" Margin="0 0 0 5"/>
+                                <PanelContainer StyleClasses="PdaContentBackground" VerticalExpand="True" HorizontalExpand="True">
+                                    <local:CoordinateGridControl Name="CoordinateGrid"
+                                                                 HorizontalExpand="True"
+                                                                 VerticalExpand="True"
+                                                                 Margin="5"/>
+                                </PanelContainer>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- Панель ввода ответа -->
+                        <PanelContainer VerticalExpand="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#FFFFFF" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Horizontal" SeparationOverride="10" Margin="10">
+                                <LineEdit Name="AnswerInput"
+                                          PlaceHolder="{Loc 'mathconsole-input-placeholder'}"
+                                          StyleClasses="LineEdit"
+                                          HorizontalExpand="True"
+                                          MinHeight="40"/>
+                                <Button Name="SubmitButton"
+                                        StyleClasses="MonotoneButton"
+                                        Text="{Loc 'mathconsole-submit-answer'}"
+                                        MinSize="150,40"
+                                        MaxSize="150,40"/>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- Кнопка нового уравнения -->
+                        <PanelContainer VerticalExpand="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#FFFFFF" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" Margin="10">
+                                <Button Name="NewEquationButton"
+                                        StyleClasses="MonotoneButton"
+                                        Text="{Loc 'mathconsole-new-equation'}"
+                                        HorizontalAlignment="Center"
+                                        MinSize="200,40"
+                                        MaxSize="200,40"/>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                    </BoxContainer>
+
+                    <!-- Правая панель с историей -->
+                    <BoxContainer Orientation="Vertical" MinWidth="350" MaxWidth="350" VerticalExpand="True" SeparationOverride="12">
+
+                        <!-- Статистика -->
+                        <PanelContainer VerticalExpand="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#FFFFFF" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+                                <Label Text="{Loc 'mathconsole-total-points'}" StyleClasses="ConsoleSubHeading" FontColorOverride="yellow" HorizontalAlignment="Center"/>
+                                <Label Name="TotalPointsLabel" Text="0" FontColorOverride="lime" HorizontalAlignment="Center" StyleClasses="LabelBig"/>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- История решений -->
+                        <PanelContainer VerticalExpand="True">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#FFFFFF" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+                                <Label Text="{Loc 'mathconsole-solution-history'}" StyleClasses="ConsoleSubHeading" FontColorOverride="orange" HorizontalAlignment="Center"/>
+
+                                <ScrollContainer HorizontalExpand="True" VerticalExpand="True">
+                                    <BoxContainer Name="RecordsList" Orientation="Vertical" SeparationOverride="5"/>
+                                </ScrollContainer>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                    </BoxContainer>
+                </BoxContainer>
+            </Control>
+        </Control>
+
+        <!-- Нижняя надпись -->
+        <BoxContainer Orientation="Horizontal" SetHeight="28" Margin="0 10 0 5" SeparationOverride="10" HorizontalExpand="True">
+            <Label Text="{Loc 'mathconsole-footer-os'}" FontColorOverride="#FFFFFF" HorizontalAlignment="Left"/>
+            <Label Text="{Loc 'mathconsole-footer-powered'}" FontColorOverride="#e7ff10ff" HorizontalExpand="True" HorizontalAlignment="Center"/>
+            <Label Text="{Loc 'mathconsole-footer-autosave'}" FontColorOverride="#01C72C" HorizontalAlignment="Right"/>
+        </BoxContainer>
+
+    </BoxContainer>
+</controls:FancyWindow>

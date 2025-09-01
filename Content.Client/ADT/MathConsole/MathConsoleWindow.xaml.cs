@@ -14,6 +14,7 @@ using System.Linq;
 using Robust.Shared.Input;
 using System.Text.RegularExpressions;
 using System.Numerics;
+using Robust.Shared.Maths;
 
 namespace Content.Client.ADT.MathConsole;
 
@@ -95,10 +96,16 @@ public class CoordinateGridControl : Control
             var gridX2 = (point2.x + GridSize / 2) * CellSize;
             var gridY2 = (GridSize / 2 - point2.y) * CellSize;
 
-            if (gridX1 >= 0 && gridX1 < size.X && gridY1 >= 0 && gridY1 < size.Y &&
-                gridX2 >= 0 && gridX2 < size.X && gridY2 >= 0 && gridY2 < size.Y)
+            // Используем алгоритм Коэна-Сазерленда для обрезки линии
+            var startPoint = new Vector2(gridX1, gridY1);
+            var endPoint = new Vector2(gridX2, gridY2);
+
+            var clippedStart = ClipLineToBounds(startPoint, endPoint, size);
+            var clippedEnd = ClipLineToBounds(endPoint, startPoint, size);
+
+            if (clippedStart.HasValue && clippedEnd.HasValue)
             {
-                handle.DrawLine(new Vector2(gridX1, gridY1), new Vector2(gridX2, gridY2), Color.Blue);
+                handle.DrawLine(clippedStart.Value, clippedEnd.Value, Color.Blue);
             }
         }
 
@@ -116,15 +123,102 @@ public class CoordinateGridControl : Control
                 handle.DrawCircle(new Vector2(gridX, gridY), 4, Color.Red);
             }
         }
+    }
 
+    private Vector2? ClipLineToBounds(Vector2 start, Vector2 end, Vector2 bounds)
+    {
+        // Алгоритм Коэна-Сазерленда для обрезки линий
+        var x1 = start.X;
+        var y1 = start.Y;
+        var x2 = end.X;
+        var y2 = end.Y;
 
+        // Коды областей
+        var code1 = GetRegionCode(x1, y1, bounds);
+        var code2 = GetRegionCode(x2, y2, bounds);
+
+        var accept = false;
+
+        while (true)
+        {
+            if ((code1 | code2) == 0)
+            {
+                // Обе точки внутри - принимаем
+                accept = true;
+                break;
+            }
+            else if ((code1 & code2) != 0)
+            {
+                // Обе точки снаружи в одной области - отбрасываем
+                break;
+            }
+            else
+            {
+                // Выбираем точку снаружи
+                var codeOut = code1 != 0 ? code1 : code2;
+                double x, y;
+
+                // Находим точку пересечения
+                if ((codeOut & 1) != 0) // Слева
+                {
+                    x = 0;
+                    y = y1 + (y2 - y1) * (0 - x1) / (x2 - x1);
+                }
+                else if ((codeOut & 2) != 0) // Справа
+                {
+                    x = bounds.X;
+                    y = y1 + (y2 - y1) * (bounds.X - x1) / (x2 - x1);
+                }
+                else if ((codeOut & 4) != 0) // Снизу
+                {
+                    y = 0;
+                    x = x1 + (x2 - x1) * (0 - y1) / (y2 - y1);
+                }
+                else // Сверху
+                {
+                    y = bounds.Y;
+                    x = x1 + (x2 - x1) * (bounds.Y - y1) / (y2 - y1);
+                }
+
+                // Заменяем внешнюю точку
+                if (codeOut == code1)
+                {
+                    x1 = (float)x;
+                    y1 = (float)y;
+                    code1 = GetRegionCode(x1, y1, bounds);
+                }
+                else
+                {
+                    x2 = (float)x;
+                    y2 = (float)y;
+                    code2 = GetRegionCode(x2, y2, bounds);
+                }
+            }
+        }
+
+        if (accept)
+        {
+            return new Vector2((float)x1, (float)y1);
+        }
+
+        return null;
+    }
+
+    private int GetRegionCode(double x, double y, Vector2 bounds)
+    {
+        var code = 0;
+        if (x < 0) code |= 1;      // Слева
+        if (x > bounds.X) code |= 2; // Справа
+        if (y < 0) code |= 4;      // Снизу
+        if (y > bounds.Y) code |= 8; // Сверху
+        return code;
     }
 
     private void ExtractPointsFromEquation(string equation)
     {
         points.Clear();
 
-                // Ищем координаты в различных форматах
+        // Ищем координаты в различных форматах
         var patterns = new[]
         {
             @"A\((-?\d+),\s*(-?\d+)\)",
@@ -151,7 +245,7 @@ public class CoordinateGridControl : Control
     }
 }
 
-public partial class MathConsoleWindow : DefaultWindow
+public partial class MathConsoleWindow : FancyWindow
 {
     private Label CurrentEquationText;
     private LineEdit AnswerInput;
@@ -160,6 +254,7 @@ public partial class MathConsoleWindow : DefaultWindow
     private BoxContainer RecordsList;
     private PanelContainer CoordinateGridContainer;
     private CoordinateGridControl CoordinateGrid;
+    private Label TotalPointsLabel;
 
     public event Action<string>? SubmitAnswer;
     public event Action? RequestNewEquation;
@@ -176,6 +271,7 @@ public partial class MathConsoleWindow : DefaultWindow
         RecordsList = this.FindControl<BoxContainer>("RecordsList");
         CoordinateGridContainer = this.FindControl<PanelContainer>("CoordinateGridContainer");
         CoordinateGrid = this.FindControl<CoordinateGridControl>("CoordinateGrid");
+        TotalPointsLabel = this.FindControl<Label>("TotalPointsLabel");
 
         // Привязываем события
         SubmitButton.OnPressed += OnSubmitButtonClick;
@@ -222,6 +318,7 @@ public partial class MathConsoleWindow : DefaultWindow
     public void UpdateState(MathConsoleState state)
     {
         CurrentEquationText.Text = state.CurrentEquation;
+        TotalPointsLabel.Text = state.TotalPointsEarned.ToString();
 
         // Проверяем, нужно ли показать координатную сетку
         ShowCoordinateGridIfNeeded(state.CurrentEquation);
@@ -229,10 +326,29 @@ public partial class MathConsoleWindow : DefaultWindow
         RecordsList.RemoveAllChildren();
         foreach (var record in state.Records.OrderByDescending(r => r.SolvedAt))
         {
-            var recordPanel = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal };
-            recordPanel.AddChild(new Label { Text = record.Equation });
-            recordPanel.AddChild(new Label { Text = record.Answer });
-            recordPanel.AddChild(new Label { Text = record.EntityName });
+            var recordPanel = new PanelContainer();
+            recordPanel.PanelOverride = new StyleBoxFlat { BackgroundColor = new Color(0, 0, 0, 0.3f) };
+
+            var recordBox = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Vertical, Margin = new Thickness(5) };
+
+            // Уравнение
+            var equationLabel = new Label
+            {
+                Text = record.Equation,
+                FontColorOverride = Color.White,
+                HorizontalExpand = true
+            };
+            recordBox.AddChild(equationLabel);
+
+            // Ответ и информация
+            var infoBox = new BoxContainer { Orientation = BoxContainer.LayoutOrientation.Horizontal, HorizontalExpand = true };
+            infoBox.AddChild(new Label { Text = $"Ответ: {record.Answer}", FontColorOverride = Color.Lime });
+            infoBox.AddChild(new Label { Text = $"Игрок: {record.EntityName}", FontColorOverride = Color.Cyan, HorizontalExpand = true });
+            infoBox.AddChild(new Label { Text = $"+{record.PointsEarned} очков", FontColorOverride = Color.Yellow });
+
+            recordBox.AddChild(infoBox);
+            recordPanel.AddChild(recordBox);
+
             RecordsList.AddChild(recordPanel);
         }
     }
@@ -259,8 +375,6 @@ public partial class MathConsoleWindow : DefaultWindow
             CoordinateGridContainer.Visible = false;
         }
     }
-
-
 
     public override void Close()
     {
