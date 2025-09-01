@@ -510,8 +510,39 @@ public sealed partial class MathConsoleSystem : EntitySystem
         var m = _random.Next(-3, 4);
         var b = _random.Next(-8, 9);
 
+        // Подставляем y = mx + b в уравнение окружности (x-h)² + (y-k)² = r²
+        // Получаем: (x-h)² + (mx + b - k)² = r²
+        // Раскрываем: x² - 2hx + h² + m²x² + 2m(b-k)x + (b-k)² = r²
+        // Приводим к виду: (1 + m²)x² + 2(m(b-k) - h)x + (h² + (b-k)² - r²) = 0
+
+        var A = 1 + m * m;
+        var B = 2 * (m * (b - k) - h);
+        var C = h * h + (b - k) * (b - k) - r * r;
+
+        // Вычисляем дискриминант
+        var discriminant = B * B - 4 * A * C;
+
+        string answer;
+        if (discriminant < 0)
+        {
+            answer = "нет точек пересечения";
+        }
+        else if (discriminant == 0)
+        {
+            var x = -B / (2.0 * A);
+            var y = m * x + b;
+            answer = $"({x:F2}, {y:F2})";
+        }
+        else
+        {
+            var x1 = (-B + Math.Sqrt(discriminant)) / (2.0 * A);
+            var y1 = m * x1 + b;
+            var x2 = (-B - Math.Sqrt(discriminant)) / (2.0 * A);
+            var y2 = m * x2 + b;
+            answer = $"({x1:F2}, {y1:F2}) и ({x2:F2}, {y2:F2})";
+        }
+
         var equation = $"Найдите точки пересечения прямой y = {m}x + {b} с окружностью (x-{h})² + (y-{k})² = {r}²";
-        var answer = "решите систему уравнений";
 
         return (equation, answer);
     }

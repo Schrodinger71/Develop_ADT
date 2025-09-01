@@ -52,7 +52,7 @@ public sealed partial class MathConsoleComponent : Component
     /// <summary>
     /// Правильный ответ на текущее уравнение
     /// </summary>
-    [AutoNetworkedField]
+    [AutoNetworkedField, ViewVariables(VVAccess.ReadOnly)]
     public string CurrentAnswer = string.Empty;
 }
 
