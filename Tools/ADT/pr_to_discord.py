@@ -49,7 +49,7 @@ def extract_changelog(text):
 
     return "\n".join(grouped_output)
 
-def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title, merged_at, commits_count, changed_files):
+def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at):
     # Подсчитываем количество изменений
     change_count = len([line for line in changelog.split('\n') if line.strip() and not line.startswith('**')])
 
@@ -75,10 +75,27 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
     else:
         merged_time = "Неизвестно"
 
+    # Вычисляем время разработки
+    dev_time = "Неизвестно"
+    if created_at and merged_at:
+        try:
+            created = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
+            merged = datetime.fromisoformat(merged_at.replace('Z', '+00:00'))
+            diff = merged - created
+
+            if diff.days > 0:
+                dev_time = f"{diff.days}д {diff.seconds // 3600}ч"
+            elif diff.seconds > 3600:
+                dev_time = f"{diff.seconds // 3600}ч {(diff.seconds % 3600) // 60}м"
+            else:
+                dev_time = f"{diff.seconds // 60}м"
+        except:
+            dev_time = "Неизвестно"
+
     embed = {
         "title": f"🚀 Обновление: {pr_title}",
         "url": pr_url,
-        "description": f"> **👤 Автор:** {author_name}\n> **📊 Изменений:** {change_count}\n> **📝 Коммитов:** {commits_count}\n> **📁 Файлов:** {changed_files}\n\n{changelog}\n",
+        "description": f"> **👤 Автор:** {author_name}\n> **📊 Изменений:** {change_count} (+{additions} -{deletions} строк)\n> **📝 Коммитов:** {commits_count}\n> **📁 Файлов:** {changed_files}\n> **⏱️ Разработка:** {dev_time}\n\n{changelog}\n",
         "color": color,
         "footer": {
             "text": f"📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}"
@@ -112,8 +129,11 @@ def main():
     pr_url = pr.get("html_url", "")
     pr_title = pr.get("title", "")
     merged_at = pr.get("merged_at", "")
+    created_at = pr.get("created_at", "")
     commits_count = pr.get("commits", 0)
     changed_files = pr.get("changed_files", 0)
+    additions = pr.get("additions", 0)
+    deletions = pr.get("deletions", 0)
 
     changelog = extract_changelog(body)
 
@@ -121,7 +141,7 @@ def main():
         print("No valid changelog found. Skipping PR.")
         return
 
-    embed = create_embed(changelog, author, avatar_url, branch, pr_url, pr_title, merged_at, commits_count, changed_files)
+    embed = create_embed(changelog, author, avatar_url, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at)
 
     headers = {"Content-Type": "application/json"}
     payload = {"embeds": [embed]}
