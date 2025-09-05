@@ -19,9 +19,21 @@ DEFAULT_COLOR = 0xE91E63  # Красный цвет эмбеда
 def extract_changelog(text):
     match = re.search(r"(?:\:cl\:|🆑)\s*(.*?)\s*(?:<!--|\Z)", text, re.DOTALL)
     if not match:
-        return None
+        return None, None
 
     content = match.group(1).strip()
+
+    # Извлекаем авторов из первой строки
+    lines = content.splitlines()
+    changelog_authors = None
+    if lines:
+        first_line = lines[0].strip()
+        # Проверяем, есть ли авторы в первой строке (не начинается с -)
+        if not first_line.startswith("-") and first_line:
+            changelog_authors = first_line
+            # Убираем первую строку с авторами из контента
+            content = "\n".join(lines[1:]).strip()
+
     groups = {key: [] for key in EMOJI_MAP.keys()}
 
     for line in content.splitlines():
@@ -36,7 +48,7 @@ def extract_changelog(text):
                 break
 
     if all(len(v) == 0 for v in groups.values()):
-        return None
+        return None, None
 
     grouped_output = []
     for key in EMOJI_ORDER:
@@ -47,9 +59,9 @@ def extract_changelog(text):
     if grouped_output and grouped_output[-1] == "":
         grouped_output.pop()
 
-    return "\n".join(grouped_output)
+    return "\n".join(grouped_output), changelog_authors
 
-def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at):
+def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at, changelog_authors=None):
     # Подсчитываем количество изменений
     change_count = len([line for line in changelog.split('\n') if line.strip() and not line.startswith('**')])
 
@@ -75,27 +87,16 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
     else:
         merged_time = "Неизвестно"
 
-    # Вычисляем время разработки
-    dev_time = "Неизвестно"
-    if created_at and merged_at:
-        try:
-            created = datetime.fromisoformat(created_at.replace('Z', '+00:00'))
-            merged = datetime.fromisoformat(merged_at.replace('Z', '+00:00'))
-            diff = merged - created
-
-            if diff.days > 0:
-                dev_time = f"{diff.days}д {diff.seconds // 3600}ч"
-            elif diff.seconds > 3600:
-                dev_time = f"{diff.seconds // 3600}ч {(diff.seconds % 3600) // 60}м"
-            else:
-                dev_time = f"{diff.seconds // 60}м"
-        except:
-            dev_time = "Неизвестно"
+    # Формируем строку с авторами
+    if changelog_authors:
+        author_display = f"👤 **Авторы чейнжлога:** {changelog_authors}\n👨‍💻 **PR автор:** {author_name}"
+    else:
+        author_display = f"👤 **Автор:** {author_name}"
 
     embed = {
         "title": f"🚀 Обновление: {pr_title}",
         "url": pr_url,
-        "description": f"> **👤 Автор:** {author_name}\n> **📊 Изменений:** {change_count} (+{additions} -{deletions} строк)\n> **📝 Коммитов:** {commits_count}\n> **📁 Файлов:** {changed_files}\n> **⏱️ Разработка:** {dev_time}\n\n{changelog}\n",
+        "description": f"> {author_display}\n> **📊 Изменений:** +{additions} -{deletions} строк\n> **📝 Коммитов:** {commits_count}\n> **📁 Файлов:** {changed_files}\n\n{changelog}\n_ _",
         "color": color,
         "footer": {
             "text": f"📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}"
@@ -135,13 +136,13 @@ def main():
     additions = pr.get("additions", 0)
     deletions = pr.get("deletions", 0)
 
-    changelog = extract_changelog(body)
+    changelog, changelog_authors = extract_changelog(body)
 
     if not changelog:
         print("No valid changelog found. Skipping PR.")
         return
 
-    embed = create_embed(changelog, author, avatar_url, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at)
+    embed = create_embed(changelog, author, avatar_url, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at, changelog_authors)
 
     headers = {"Content-Type": "application/json"}
     payload = {"embeds": [embed]}
