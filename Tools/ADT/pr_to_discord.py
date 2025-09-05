@@ -75,10 +75,13 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
     else:
         merged_time = "Неизвестно"
 
+    # Форматируем статистику с блок-цитатами
+    stats_block = f"> **📊 Статистика:**\n> Изменений: {change_count}\n> Коммитов: {commits_count}\n> Файлов: {changed_files}"
+
     embed = {
         "title": f"🚀 Обновление: {pr_title}",
         "url": pr_url,
-        "description": f"**👤 Автор:** {author_name}\n**🌿 Ветка:** {branch}\n**📊 Изменений:** {change_count}\n**📝 Коммитов:** {commits_count}\n**📁 Файлов:** {changed_files}\n\n{changelog}",
+        "description": f"**👤 Автор:** {author_name}\n\n{changelog}\n\n{stats_block}",
         "color": color,
         "footer": {
             "text": f"📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}"
