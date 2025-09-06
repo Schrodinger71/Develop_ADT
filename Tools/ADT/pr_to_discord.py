@@ -104,7 +104,7 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
 
     # Формируем строку с авторами
     if changelog_authors:
-        author_display = f"👤 **Авторы:** {changelog_authors}\n**PR автор:** {author_name}"
+        author_display = f"👤 **Авторы:** {changelog_authors}"
     elif real_author_name:
         author_display = f"👤 **Автор:** {real_author_name}"
     else:
