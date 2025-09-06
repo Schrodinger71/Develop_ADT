@@ -6,11 +6,11 @@ import requests
 from datetime import datetime, timedelta
 
 EMOJI_MAP = {
-    "add": "- ✨",
-    "remove": "- ❌",
-    "delete": "- 🗑️",
-    "tweak": "- 🔧",
-    "fix": "- 🐛"
+    "add": "- ✨ add:",
+    "remove": "- ❌ remove:",
+    "delete": "- 🗑️ delete:",
+    "tweak": "- 🔧 tweak:",
+    "fix": "- 🐛 fix:"
 }
 
 EMOJI_ORDER = ["add", "remove", "delete", "tweak", "fix"]
