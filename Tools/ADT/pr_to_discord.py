@@ -6,11 +6,11 @@ import requests
 from datetime import datetime, timedelta
 
 EMOJI_MAP = {
-    "add": "✨",
-    "remove": "❌",
-    "delete": "🗑️",
-    "tweak": "🔧",
-    "fix": "🐛"
+    "add": "- ✨",
+    "remove": "- ❌",
+    "delete": "- 🗑️",
+    "tweak": "- 🔧",
+    "fix": "- 🐛"
 }
 
 EMOJI_ORDER = ["add", "remove", "delete", "tweak", "fix"]
@@ -68,8 +68,8 @@ def extract_changelog(text):
 
     # Очищаем финальный вывод от лишних символов
     final_output = "\n".join(grouped_output)
-    # Убираем множественные переносы строк
-    final_output = re.sub(r'\n\s*\n', '\n', final_output)
+    # Убираем только тройные и более переносы строк, оставляя двойные для разделения категорий
+    final_output = re.sub(r'\n\s*\n\s*\n+', '\n\n', final_output)
     # Убираем невидимые символы и нормализуем пробелы
     final_output = re.sub(r'[\u200b-\u200d\ufeff]', '', final_output)
     final_output = re.sub(r'[ \t]+', ' ', final_output)
@@ -116,7 +116,7 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
         "description": f"> {author_display}\n> **📊 Изменений:** +{additions} -{deletions} строк\n> **📝 Коммитов:** {commits_count}\n> **📁 Файлов:** {changed_files}\n\n{changelog}\n_ _",
         "color": color,
         "footer": {
-            "text": f"👨‍💻 {author_name} • 📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}",
+            "text": f"{author_name} • 📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}",
             "icon_url": author_avatar
         }
     }
