@@ -116,10 +116,8 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
         "description": f"> {author_display}\n> **📊 Изменений:** +{additions} -{deletions} строк\n> **📝 Коммитов:** {commits_count}\n> **📁 Файлов:** {changed_files}\n\n{changelog}\n_ _",
         "color": color,
         "footer": {
-            "text": f"👨‍💻 {author_name} • 📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}"
-        },
-        "thumbnail": {
-            "url": author_avatar
+            "text": f"👨‍💻 {author_name} • 📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}",
+            "icon_url": author_avatar
         }
     }
     return embed
