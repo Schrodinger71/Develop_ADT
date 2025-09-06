@@ -26,11 +26,16 @@ def extract_changelog(text):
     # Извлекаем авторов из первой строки
     lines = content.splitlines()
     changelog_authors = None
+    real_author_name = None
     if lines:
         first_line = lines[0].strip()
         # Проверяем, есть ли авторы в первой строке (не начинается с -)
         if not first_line.startswith("-") and first_line:
-            changelog_authors = first_line
+            # Если это одно имя без пробелов и не содержит типичные символы никнеймов
+            if " " not in first_line and not any(char in first_line for char in ["@", "#", "_", "-"]):
+                real_author_name = first_line
+            else:
+                changelog_authors = first_line
             # Убираем первую строку с авторами из контента
             content = "\n".join(lines[1:]).strip()
 
@@ -44,6 +49,8 @@ def extract_changelog(text):
         for key in EMOJI_MAP:
             if line_content.lower().startswith(f"{key}:"):
                 desc = line_content[len(key)+1:].strip().capitalize()
+                # Убираем переносы строк и лишние пробелы
+                desc = re.sub(r'\s+', ' ', desc).strip()
                 groups[key].append(f"{EMOJI_MAP[key]} {desc}")
                 break
 
@@ -59,9 +66,17 @@ def extract_changelog(text):
     if grouped_output and grouped_output[-1] == "":
         grouped_output.pop()
 
-    return "\n".join(grouped_output), changelog_authors
+    # Очищаем финальный вывод от лишних символов
+    final_output = "\n".join(grouped_output)
+    # Убираем множественные переносы строк
+    final_output = re.sub(r'\n\s*\n', '\n', final_output)
+    # Убираем невидимые символы и нормализуем пробелы
+    final_output = re.sub(r'[\u200b-\u200d\ufeff]', '', final_output)
+    final_output = re.sub(r'[ \t]+', ' ', final_output)
 
-def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at, changelog_authors=None):
+    return final_output, changelog_authors, real_author_name
+
+def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at, changelog_authors=None, real_author_name=None):
     # Подсчитываем количество изменений
     change_count = len([line for line in changelog.split('\n') if line.strip() and not line.startswith('**')])
 
@@ -89,9 +104,11 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
 
     # Формируем строку с авторами
     if changelog_authors:
-        author_display = f"👤 **Авторы чейнжлога:** {changelog_authors}\n👨‍💻 **PR автор:** {author_name}"
+        author_display = f"👤 **Авторы чейнжлога:** {changelog_authors}\n**PR автор:** {author_name}"
+    elif real_author_name:
+        author_display = f"👤 **Автор:** {real_author_name}"
     else:
-        author_display = f"👤 **Автор:** {author_name}"
+        author_display = f"**Автор:** {author_name}"
 
     embed = {
         "title": f"🚀 Обновление: {pr_title}",
@@ -99,7 +116,7 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
         "description": f"> {author_display}\n> **📊 Изменений:** +{additions} -{deletions} строк\n> **📝 Коммитов:** {commits_count}\n> **📁 Файлов:** {changed_files}\n\n{changelog}\n_ _",
         "color": color,
         "footer": {
-            "text": f"📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}"
+            "text": f"👨‍💻 {author_name} • 📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}"
         },
         "thumbnail": {
             "url": author_avatar
@@ -136,13 +153,13 @@ def main():
     additions = pr.get("additions", 0)
     deletions = pr.get("deletions", 0)
 
-    changelog, changelog_authors = extract_changelog(body)
+    changelog, changelog_authors, real_author_name = extract_changelog(body)
 
     if not changelog:
         print("No valid changelog found. Skipping PR.")
         return
 
-    embed = create_embed(changelog, author, avatar_url, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at, changelog_authors)
+    embed = create_embed(changelog, author, avatar_url, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at, changelog_authors, real_author_name)
 
     headers = {"Content-Type": "application/json"}
     payload = {"embeds": [embed]}
