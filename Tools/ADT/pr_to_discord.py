@@ -125,10 +125,14 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
 def main():
     event_path = os.environ.get("GITHUB_EVENT_PATH")
     webhook_url = os.environ.get("DISCORD_WEBHOOK")
+    bot_token = os.environ.get("DISCORD_BOT_TOKEN")
 
     if not event_path or not webhook_url:
         print("Missing required environment variables.")
         return
+
+    if not bot_token:
+        print("⚠️ DISCORD_BOT_TOKEN not set - publishing will be skipped")
 
     with open(event_path, 'r', encoding='utf-8') as f:
         event = json.load(f)
@@ -163,7 +167,7 @@ def main():
     payload = {
         "embeds": [embed],
         "wait": True,  # Ждем ответ от Discord для подтверждения публикации
-        "flags": 0  # Убираем все флаги, включая SUPPRESS_EMBEDS
+        "flags": 0,  # Убираем все флаги, включая SUPPRESS_EMBEDS
     }
 
     # Отправляем сообщение
@@ -175,22 +179,35 @@ def main():
 
     print("✅ Webhook sent successfully.")
 
-    # Если сообщение отправлено успешно, публикуем его в новостном канале
+    # Если сообщение отправлено успешно, пытаемся опубликовать его
     if response.text.strip():
         try:
             message_data = response.json()
             message_id = message_data.get('id')
+            channel_id = message_data.get('channel_id')
             print(f"📝 Message ID: {message_id}")
             print(f"📅 Created at: {message_data.get('timestamp', 'Unknown')}")
+            print(f"📺 Channel ID: {channel_id}")
 
-            if message_id:
-                # Публикуем сообщение в новостном канале
-                publish_url = f"{webhook_url}/messages/{message_id}/crosspost"
-                publish_response = requests.post(publish_url, headers=headers)
+            if message_id and channel_id and bot_token:
+                # Пытаемся опубликовать через Discord API
+                api_url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{message_id}/crosspost"
+                api_headers = {
+                    "Authorization": f"Bot {bot_token}",
+                    "Content-Type": "application/json"
+                }
+
+                publish_response = requests.post(api_url, headers=api_headers)
                 if publish_response.status_code == 200:
                     print("📢 Message published to news channel!")
+                elif publish_response.status_code == 403:
+                    print("⚠️ Bot doesn't have permission to publish messages")
+                elif publish_response.status_code == 400:
+                    print("⚠️ Channel is not a news channel or message already published")
                 else:
                     print(f"⚠️ Failed to publish message: {publish_response.status_code} - {publish_response.text}")
+            elif not bot_token:
+                print("⚠️ No bot token provided - message not published")
         except json.JSONDecodeError:
             print("📝 Discord webhook executed successfully (no JSON response)")
     else:
