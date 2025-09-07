@@ -165,21 +165,36 @@ def main():
         "wait": True,  # Ждем ответ от Discord для подтверждения публикации
         "flags": 0  # Убираем все флаги, включая SUPPRESS_EMBEDS
     }
+
+    # Отправляем сообщение
     response = requests.post(webhook_url, headers=headers, data=json.dumps(payload))
+
     if response.status_code >= 400:
         print(f"❌ Failed to send webhook: {response.status_code} - {response.text}")
+        return
+
+    print("✅ Webhook sent successfully.")
+
+    # Если сообщение отправлено успешно, публикуем его в новостном канале
+    if response.text.strip():
+        try:
+            message_data = response.json()
+            message_id = message_data.get('id')
+            print(f"📝 Message ID: {message_id}")
+            print(f"📅 Created at: {message_data.get('timestamp', 'Unknown')}")
+
+            if message_id:
+                # Публикуем сообщение в новостном канале
+                publish_url = f"{webhook_url}/messages/{message_id}/crosspost"
+                publish_response = requests.post(publish_url, headers=headers)
+                if publish_response.status_code == 200:
+                    print("📢 Message published to news channel!")
+                else:
+                    print(f"⚠️ Failed to publish message: {publish_response.status_code} - {publish_response.text}")
+        except json.JSONDecodeError:
+            print("📝 Discord webhook executed successfully (no JSON response)")
     else:
-        print("✅ Webhook sent successfully.")
-        # Проверяем, есть ли JSON ответ от Discord
-        if response.text.strip():
-            try:
-                message_data = response.json()
-                print(f"📝 Message ID: {message_data.get('id', 'Unknown')}")
-                print(f"📅 Created at: {message_data.get('timestamp', 'Unknown')}")
-            except json.JSONDecodeError:
-                print("📝 Discord webhook executed successfully (no JSON response)")
-        else:
-            print("📝 Discord webhook executed successfully (empty response)")
+        print("📝 Discord webhook executed successfully (empty response)")
 
 if __name__ == "__main__":
     main()
