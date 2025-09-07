@@ -88,18 +88,22 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
     else:
         merged_time = "Неизвестно"
 
+    # Формируем красивое отображение авторов
     if changelog_authors:
-        author_display = f"👤 **Авторы:** {changelog_authors}"
+        author_name_display = f"👥 Авторы: {changelog_authors}"
     elif real_author_name:
-        author_display = f"👤 **Автор:** {real_author_name}"
+        author_name_display = f"👤 Автор: {real_author_name}"
     else:
-        author_display = f"**Автор:** {author_name}"
+        author_name_display = f"👤 Автор: {author_name}"
 
     embed = {
         "title": f"🚀 Обновление: {pr_title}",
         "url": pr_url,
-        "description": f"{author_display}\n\n{changelog}\n_ _",
+        "description": f"{changelog}\n_ _",
         "color": color,
+        "author": {
+            "name": author_name_display,
+        },
         "footer": {
             "text": f"{author_name} • 📅 {(datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}",
             "icon_url": author_avatar
