@@ -113,7 +113,7 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
     embed = {
         "title": f"🚀 Обновление: {pr_title}",
         "url": pr_url,
-        "description": f"{author_display}\n{changelog}\n_ _",
+        "description": f"{author_display}\n\n{changelog}\n_ _",
         "color": color,
         "footer": {
             "text": f"{author_name} • 📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}",
@@ -162,13 +162,18 @@ def main():
     headers = {"Content-Type": "application/json"}
     payload = {
         "embeds": [embed],
-        "flags": 0  # Убираем флаг SUPPRESS_EMBEDS для публикации эмбеда
+        "wait": True,  # Ждем ответ от Discord для подтверждения публикации
+        "flags": 0  # Убираем все флаги, включая SUPPRESS_EMBEDS
     }
     response = requests.post(webhook_url, headers=headers, data=json.dumps(payload))
     if response.status_code >= 400:
         print(f"❌ Failed to send webhook: {response.status_code} - {response.text}")
     else:
         print("✅ Webhook sent successfully.")
+        if response.json():
+            message_data = response.json()
+            print(f"📝 Message ID: {message_data.get('id', 'Unknown')}")
+            print(f"📅 Created at: {message_data.get('timestamp', 'Unknown')}")
 
 if __name__ == "__main__":
     main()
