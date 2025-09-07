@@ -6,11 +6,11 @@ import requests
 from datetime import datetime, timedelta
 
 EMOJI_MAP = {
-    "add": "- ✨ add:",
-    "remove": "- ❌ remove:",
-    "delete": "- 🗑️ delete:",
-    "tweak": "- 🔧 tweak:",
-    "fix": "- 🐛 fix:"
+    "add": "✨ add:",
+    "remove": "❌ remove:",
+    "delete": "🗑️ delete:",
+    "tweak": "🔧 tweak:",
+    "fix": "🐛 fix:"
 }
 
 EMOJI_ORDER = ["add", "remove", "delete", "tweak", "fix"]
@@ -113,7 +113,7 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
     embed = {
         "title": f"🚀 Обновление: {pr_title}",
         "url": pr_url,
-        "description": f"> {author_display}\n> **📊 Изменений:** +{additions} -{deletions} строк\n> **📝 Коммитов:** {commits_count}\n> **📁 Файлов:** {changed_files}\n\n{changelog}\n_ _",
+        "description": f"{author_display}\n{changelog}\n_ _",
         "color": color,
         "footer": {
             "text": f"{author_name} • 📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}",
@@ -160,7 +160,10 @@ def main():
     embed = create_embed(changelog, author, avatar_url, branch, pr_url, pr_title, merged_at, commits_count, changed_files, additions, deletions, created_at, changelog_authors, real_author_name)
 
     headers = {"Content-Type": "application/json"}
-    payload = {"embeds": [embed]}
+    payload = {
+        "embeds": [embed],
+        "flags": 0  # Убираем флаг SUPPRESS_EMBEDS для публикации эмбеда
+    }
     response = requests.post(webhook_url, headers=headers, data=json.dumps(payload))
     if response.status_code >= 400:
         print(f"❌ Failed to send webhook: {response.status_code} - {response.text}")
