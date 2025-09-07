@@ -3,7 +3,7 @@ import os
 import json
 import re
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 EMOJI_MAP = {
     "add": "✨ add:",
@@ -116,7 +116,7 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
         "description": f"{author_display}\n\n{changelog}\n_ _",
         "color": color,
         "footer": {
-            "text": f"{author_name} • 📅 {(datetime.utcnow() + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}",
+            "text": f"{author_name} • 📅 {(datetime.now(timezone.utc) + timedelta(hours=3)).strftime('%d.%m.%Y %H:%M МСК')}",
             "icon_url": author_avatar
         }
     }
@@ -170,10 +170,16 @@ def main():
         print(f"❌ Failed to send webhook: {response.status_code} - {response.text}")
     else:
         print("✅ Webhook sent successfully.")
-        if response.json():
-            message_data = response.json()
-            print(f"📝 Message ID: {message_data.get('id', 'Unknown')}")
-            print(f"📅 Created at: {message_data.get('timestamp', 'Unknown')}")
+        # Проверяем, есть ли JSON ответ от Discord
+        if response.text.strip():
+            try:
+                message_data = response.json()
+                print(f"📝 Message ID: {message_data.get('id', 'Unknown')}")
+                print(f"📅 Created at: {message_data.get('timestamp', 'Unknown')}")
+            except json.JSONDecodeError:
+                print("📝 Discord webhook executed successfully (no JSON response)")
+        else:
+            print("📝 Discord webhook executed successfully (empty response)")
 
 if __name__ == "__main__":
     main()
