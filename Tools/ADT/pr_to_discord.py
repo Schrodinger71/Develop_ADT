@@ -110,7 +110,7 @@ def create_embed(changelog, author_name, author_avatar, branch, pr_url, pr_title
 def main():
     event_path = os.environ.get("GITHUB_EVENT_PATH")
     bot_token = os.environ.get("DISCORD_BOT_TOKEN")
-    channel_id = os.environ.get("DISCORD_CHANNEL_ID")
+    channel_id = 1122933395400441918
 
     if not event_path or not bot_token or not channel_id:
         print("❌ Missing required environment variables.")
