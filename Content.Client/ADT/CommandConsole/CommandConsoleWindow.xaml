@@ -1,0 +1,204 @@
+<controls:FancyWindow
+    xmlns="https://spacestation14.io"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:Content.Client.UserInterface.Controls"
+    xmlns:gfx="clr-namespace:Robust.Client.Graphics;assembly=Robust.Client"
+    Title="Nanotrasen Command Console v1.42"
+    MinSize="1000 700"
+    x:Class="Content.Client.ADT.CommandConsole.CommandConsoleWindow">
+
+    <!-- Фон и границы окна -->
+    <PanelContainer Name="Background" StyleClasses="PdaBackgroundRect" ModulateSelfOverride="#0e0e0eff"/>
+    <PanelContainer Name="Border" StyleClasses="PdaBorderRect"/>
+
+    <BoxContainer Orientation="Vertical" HorizontalExpand="True" VerticalExpand="True" Margin="10">
+
+        <!-- Заголовок -->
+        <Label Text="NANOTRASEN COMMAND CONSOLE v1.42"
+                StyleClasses="ConsoleHeading"
+                FontColorOverride="#00ffff"
+                HorizontalAlignment="Center" Margin="0 5 0 10"/>
+
+        <!-- Основной контент -->
+        <Control Margin="0" RectClipContent="True" VerticalExpand="True" HorizontalExpand="True">
+            <PanelContainer Name="ContentBorder" StyleClasses="PdaBackground"/>
+            <Control Name="ConsoleContentsContainer" Margin="0" Modulate="#ff5e5eff" HorizontalExpand="True" VerticalExpand="True">
+
+                <!-- Фон -->
+                <PanelContainer Name="ContentBackground" StyleClasses="PdaContentBackground" HorizontalExpand="True" VerticalExpand="True"/>
+
+                <!-- Основная панель -->
+                <BoxContainer Orientation="Horizontal" HorizontalExpand="True" VerticalExpand="True" SeparationOverride="20">
+
+                    <!-- Левая панель - системная информация -->
+                    <BoxContainer Orientation="Vertical" MinWidth="350" MaxWidth="350" VerticalExpand="True" SeparationOverride="12">
+
+                        <!-- Системный статус -->
+                        <PanelContainer VerticalExpand="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#00ffff" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+                                <Label Text="SYSTEM STATUS" StyleClasses="ConsoleSubHeading" FontColorOverride="#00ffff" HorizontalAlignment="Center"/>
+
+                                <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                                    <Label Text="Status:" FontColorOverride="#cccccc" MinWidth="80"/>
+                                    <Label Name="SystemStatusLabel" Text="ONLINE" FontColorOverride="#00ff00" HorizontalExpand="True"/>
+                                </BoxContainer>
+
+                                <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                                    <Label Text="Uptime:" FontColorOverride="#cccccc" MinWidth="80"/>
+                                    <Label Name="UptimeLabel" Text="00:00:00" FontColorOverride="#ffff00" HorizontalExpand="True"/>
+                                </BoxContainer>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- Ресурсы системы -->
+                        <PanelContainer VerticalExpand="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#00ff00" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+                                <Label Text="RESOURCES" StyleClasses="ConsoleSubHeading" FontColorOverride="#00ff00" HorizontalAlignment="Center"/>
+
+                                <BoxContainer Orientation="Vertical" SeparationOverride="5">
+                                    <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                                        <Label Text="CPU:" FontColorOverride="#cccccc" MinWidth="40"/>
+                                        <Label Name="CpuLabel" Text="45%" FontColorOverride="#ff8800" HorizontalExpand="True"/>
+                                    </BoxContainer>
+                                    <PanelContainer MinHeight="8" MaxHeight="8" HorizontalExpand="True">
+                                        <PanelContainer.PanelOverride>
+                                            <gfx:StyleBoxFlat BackgroundColor="#333333" BorderColor="#666666" BorderThickness="1"/>
+                                        </PanelContainer.PanelOverride>
+                                        <PanelContainer Name="CpuBar" MinHeight="6" MaxHeight="6" Margin="1" HorizontalExpand="True" Modulate="#ff8800"/>
+                                    </PanelContainer>
+                                </BoxContainer>
+
+                                <BoxContainer Orientation="Vertical" SeparationOverride="5">
+                                    <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                                        <Label Text="RAM:" FontColorOverride="#cccccc" MinWidth="40"/>
+                                        <Label Name="RamLabel" Text="67%" FontColorOverride="#0088ff" HorizontalExpand="True"/>
+                                    </BoxContainer>
+                                    <PanelContainer MinHeight="8" MaxHeight="8" HorizontalExpand="True">
+                                        <PanelContainer.PanelOverride>
+                                            <gfx:StyleBoxFlat BackgroundColor="#333333" BorderColor="#666666" BorderThickness="1"/>
+                                        </PanelContainer.PanelOverride>
+                                        <PanelContainer Name="RamBar" MinHeight="6" MaxHeight="6" Margin="1" HorizontalExpand="True" Modulate="#0088ff"/>
+                                    </PanelContainer>
+                                </BoxContainer>
+
+                                <BoxContainer Orientation="Vertical" SeparationOverride="5">
+                                    <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                                        <Label Text="HDD:" FontColorOverride="#cccccc" MinWidth="40"/>
+                                        <Label Name="HddLabel" Text="23%" FontColorOverride="#ff0088" HorizontalExpand="True"/>
+                                    </BoxContainer>
+                                    <PanelContainer MinHeight="8" MaxHeight="8" HorizontalExpand="True">
+                                        <PanelContainer.PanelOverride>
+                                            <gfx:StyleBoxFlat BackgroundColor="#333333" BorderColor="#666666" BorderThickness="1"/>
+                                        </PanelContainer.PanelOverride>
+                                        <PanelContainer Name="HddBar" MinHeight="6" MaxHeight="6" Margin="1" HorizontalExpand="True" Modulate="#ff0088"/>
+                                    </PanelContainer>
+                                </BoxContainer>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- Активные процессы -->
+                        <PanelContainer VerticalExpand="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#ff8800" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+                                <Label Text="ACTIVE PROCESSES" StyleClasses="ConsoleSubHeading" FontColorOverride="#ff8800" HorizontalAlignment="Center"/>
+
+                                <ScrollContainer HorizontalExpand="True" MinHeight="80" MaxHeight="80">
+                                    <Label Name="ProcessesLabel"
+                                        FontColorOverride="#cccccc"
+                                        HorizontalExpand="True"
+                                        VerticalExpand="True"
+                                        ClipText="True"
+                                        MouseFilter="Ignore"/>
+                                </ScrollContainer>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- Информация о сессии -->
+                        <PanelContainer VerticalExpand="True">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#0088ff" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" SeparationOverride="8" Margin="10">
+                                <Label Text="SESSION INFO" StyleClasses="ConsoleSubHeading" FontColorOverride="#0088ff" HorizontalAlignment="Center"/>
+
+                                <BoxContainer Orientation="Vertical" SeparationOverride="5">
+                                    <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                                        <Label Text="User:" FontColorOverride="#cccccc" MinWidth="60"/>
+                                        <Label Name="UserLabel" Text="admin" FontColorOverride="#00ff00" HorizontalExpand="True"/>
+                                    </BoxContainer>
+                                    <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                                        <Label Text="Level:" FontColorOverride="#cccccc" MinWidth="60"/>
+                                        <Label Name="LevelLabel" Text="ROOT" FontColorOverride="#ff0000" HorizontalExpand="True"/>
+                                    </BoxContainer>
+                                    <BoxContainer Orientation="Horizontal" HorizontalExpand="True">
+                                        <Label Text="Terminal:" FontColorOverride="#cccccc" MinWidth="60"/>
+                                        <Label Name="TerminalLabel" Text="xterm-256color" FontColorOverride="#ffff00" HorizontalExpand="True"/>
+                                    </BoxContainer>
+                                </BoxContainer>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                    </BoxContainer>
+
+                    <!-- Правая панель - консоль -->
+                    <BoxContainer Orientation="Vertical" VerticalExpand="True" HorizontalExpand="True" SeparationOverride="10">
+
+                        <!-- Область вывода консоли -->
+                        <PanelContainer VerticalExpand="True" HorizontalExpand="True">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#ffffff" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Vertical" Margin="10">
+                                <Label Text="CONSOLE OUTPUT" StyleClasses="ConsoleSubHeading" FontColorOverride="#ffffff" HorizontalAlignment="Center" Margin="0 0 0 5"/>
+
+                                <ScrollContainer HorizontalExpand="True" VerticalExpand="True">
+                                    <RichTextLabel Name="OutputLabel"
+                                        HorizontalExpand="True"
+                                        VerticalExpand="True"/>
+                                </ScrollContainer>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                        <!-- Область ввода команд -->
+                        <PanelContainer VerticalExpand="False">
+                            <PanelContainer.PanelOverride>
+                                <gfx:StyleBoxFlat BorderColor="#ffff00" BorderThickness="2"/>
+                            </PanelContainer.PanelOverride>
+                            <BoxContainer Orientation="Horizontal" Margin="10" SeparationOverride="10">
+                                <Label Name="PromptLabel" Text=">" FontColorOverride="#ffff00" Margin="0 0 5 0"/>
+                                <TextEdit Name="CommandInput"
+                                        HorizontalExpand="True"
+                                        MinHeight="30"
+                                        MaxHeight="30"
+                                        StyleClasses="MonotoneTextEdit"/>
+                                <Button Name="ExecuteButton"
+                                        StyleClasses="MonotoneButton"
+                                        Text="EXECUTE"
+                                        MinSize="100,30"
+                                        MaxSize="100,30"/>
+                            </BoxContainer>
+                        </PanelContainer>
+
+                    </BoxContainer>
+
+                </BoxContainer>
+            </Control>
+        </Control>
+
+        <!-- Нижняя надпись -->
+        <BoxContainer Orientation="Horizontal" SetHeight="28" Margin="0 10 0 5" SeparationOverride="10" HorizontalExpand="True">
+            <Label Text="Schrödinger.inc Systems" FontColorOverride="#FFFFFF" HorizontalAlignment="Left"/>
+            <Label Text="Powered by Nanotrasen OS" FontColorOverride="#e7ff10ff" HorizontalExpand="True" HorizontalAlignment="Center"/>
+            <Label Text="AUTO-SAVE: ENABLED" FontColorOverride="#ff0d00ff" HorizontalAlignment="Right"/>
+        </BoxContainer>
+
+    </BoxContainer>
+</controls:FancyWindow>
