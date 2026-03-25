@@ -1,4 +1,4 @@
-name: Build and Release
+name: Create Release ADT
 
 concurrency:
   group: release
@@ -21,22 +21,30 @@ jobs:
         id: version
         shell: pwsh
         run: |
+          # Пытаемся получить последний тег
           $lastTag = git describe --tags --abbrev=0 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            $lastTag = $null
+          }
+
+          Write-Host "Last tag: $lastTag"
           echo "LAST_TAG=$lastTag" >> $env:GITHUB_ENV
 
-          if ($lastTag) {
-            $lastVersion = $lastTag -replace 'v', ''
-            $parts = $lastVersion.Split('.')
-            $major = [int]$parts[0]
-            $minor = [int]$parts[1]
+          if ($lastTag -and $lastTag -match '^v(\d+)\.(\d+)$') {
+            $major = [int]$matches[1]
+            $minor = [int]$matches[2]
 
             $minor++
             $newVersion = "$major.$minor"
           } else {
+            # если тегов нет или формат кривой
             $newVersion = "1.0"
           }
 
           $newTag = "v$newVersion"
+
+          Write-Host "New version: $newVersion"
+          Write-Host "New tag: $newTag"
 
           echo "VERSION=$newVersion" >> $env:GITHUB_OUTPUT
           echo "TAG=$newTag" >> $env:GITHUB_OUTPUT
@@ -46,6 +54,7 @@ jobs:
         run: |
           git fetch --tags
           $tag = "${{ steps.version.outputs.TAG }}"
+
           git rev-parse $tag 2>$null
           if ($LASTEXITCODE -eq 0) {
             Write-Error "Tag already exists!"
@@ -67,6 +76,7 @@ jobs:
         run: dotnet run --project Content.Packaging server --platform win-x64 --hybrid-acz
 
       - name: Create release archive
+        id: archive
         shell: pwsh
         run: |
           $serverZip = Get-ChildItem -Path "release" -Filter "SS14.Server_win-x64.zip" | Select-Object -First 1
@@ -79,7 +89,7 @@ jobs:
           $newName = "SS14.Server_${{ steps.version.outputs.VERSION }}.zip"
           Copy-Item $serverZip.FullName -Destination ".\$newName"
 
-          echo "SERVER_ZIP=$newName" >> $env:GITHUB_ENV
+          echo "SERVER_ZIP=$newName" >> $env:GITHUB_OUTPUT
 
       - name: Generate changelog
         id: changelog
@@ -90,7 +100,7 @@ jobs:
           if ($lastTag) {
             $commits = git log "$lastTag..HEAD" --pretty=format:"- %s"
           } else {
-            $commits = git log -10 --pretty=format:"- %s"
+            $commits = git log --pretty=format:"- %s"
           }
 
           echo "CHANGELOG<<EOF" >> $env:GITHUB_OUTPUT
@@ -110,7 +120,7 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
           name: Версия ${{ steps.version.outputs.VERSION }}
-          files: ${{ env.SERVER_ZIP }}
+          files: ${{ steps.archive.outputs.SERVER_ZIP }}
           body: |
             ## Изменения
             ${{ steps.changelog.outputs.CHANGELOG }}
