@@ -54,13 +54,33 @@ jobs:
         shell: pwsh
         run: |
           git fetch --tags
-          $tag = "${{ steps.version.outputs.TAG }}"
-
-          git rev-parse $tag 2>$null
-          if ($LASTEXITCODE -eq 0) {
-            Write-Error "Tag already exists!"
-            exit 1
+          
+          $tags = git tag
+          $versions = $tags | Where-Object { $_ -match '^v\d+\.\d+$' }
+          
+          if ($versions) {
+            $numbers = $versions | ForEach-Object {
+              $_ -replace 'v', ''
+            }
+          
+            $sorted = $numbers | Sort-Object {
+              $parts = $_.Split('.')
+              [int]$parts[0]*1000 + [int]$parts[1]
+            }
+          
+            $last = $sorted[-1]
+            $parts = $last.Split('.')
+          
+            $major = [int]$parts[0]
+            $minor = [int]$parts[1]
+          
+            $minor++
+            $newVersion = "$major.$minor"
+          } else {
+            $newVersion = "1.0"
           }
+          
+          $newTag = "v$newVersion"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4.1.0
