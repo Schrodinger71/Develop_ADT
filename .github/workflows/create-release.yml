@@ -21,33 +21,34 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          # Пытаемся получить последний тег
           $lastTag = git describe --tags --abbrev=0 2>$null
           if ($LASTEXITCODE -ne 0) {
             $lastTag = $null
+            $global:LASTEXITCODE = 0
           }
-
+          
           Write-Host "Last tag: $lastTag"
           echo "LAST_TAG=$lastTag" >> $env:GITHUB_ENV
-
+          
           if ($lastTag -and $lastTag -match '^v(\d+)\.(\d+)$') {
             $major = [int]$matches[1]
             $minor = [int]$matches[2]
-
+          
             $minor++
             $newVersion = "$major.$minor"
           } else {
-            # если тегов нет или формат кривой
             $newVersion = "1.0"
           }
-
+          
           $newTag = "v$newVersion"
-
+          
           Write-Host "New version: $newVersion"
           Write-Host "New tag: $newTag"
-
+          
           echo "VERSION=$newVersion" >> $env:GITHUB_OUTPUT
           echo "TAG=$newTag" >> $env:GITHUB_OUTPUT
+          
+          $global:LASTEXITCODE = 0
 
       - name: Check if tag exists
         shell: pwsh
