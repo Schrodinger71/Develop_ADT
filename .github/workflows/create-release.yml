@@ -117,13 +117,13 @@ jobs:
         shell: pwsh
         run: |
           $lastTag = "${env:LAST_TAG}"
-
+      
           if ($lastTag) {
-            $commits = git log "$lastTag..HEAD" --pretty=format:"- %s"
+            $commits = git log "$lastTag..HEAD" -50 --pretty=format:"- %s"
           } else {
-            $commits = git log --pretty=format:"- %s"
+            $commits = git log -50 --pretty=format:"- %s"
           }
-
+      
           echo "CHANGELOG<<EOF" >> $env:GITHUB_OUTPUT
           $commits | ForEach-Object { echo $_ } >> $env:GITHUB_OUTPUT
           echo "EOF" >> $env:GITHUB_OUTPUT
