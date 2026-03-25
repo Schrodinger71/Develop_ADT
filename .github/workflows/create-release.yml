@@ -26,61 +26,26 @@ jobs:
             $lastTag = $null
             $global:LASTEXITCODE = 0
           }
-          
+
           Write-Host "Last tag: $lastTag"
           echo "LAST_TAG=$lastTag" >> $env:GITHUB_ENV
-          
+
           if ($lastTag -and $lastTag -match '^v(\d+)\.(\d+)$') {
             $major = [int]$matches[1]
             $minor = [int]$matches[2]
-          
             $minor++
             $newVersion = "$major.$minor"
           } else {
             $newVersion = "1.0"
           }
-          
+
           $newTag = "v$newVersion"
-          
           Write-Host "New version: $newVersion"
           Write-Host "New tag: $newTag"
-          
+
           echo "VERSION=$newVersion" >> $env:GITHUB_OUTPUT
           echo "TAG=$newTag" >> $env:GITHUB_OUTPUT
-          
           $global:LASTEXITCODE = 0
-
-      - name: Check if tag exists
-        shell: pwsh
-        run: |
-          git fetch --tags
-          
-          $tags = git tag
-          $versions = $tags | Where-Object { $_ -match '^v\d+\.\d+$' }
-          
-          if ($versions) {
-            $numbers = $versions | ForEach-Object {
-              $_ -replace 'v', ''
-            }
-          
-            $sorted = $numbers | Sort-Object {
-              $parts = $_.Split('.')
-              [int]$parts[0]*1000 + [int]$parts[1]
-            }
-          
-            $last = $sorted[-1]
-            $parts = $last.Split('.')
-          
-            $major = [int]$parts[0]
-            $minor = [int]$parts[1]
-          
-            $minor++
-            $newVersion = "$major.$minor"
-          } else {
-            $newVersion = "1.0"
-          }
-          
-          $newTag = "v$newVersion"
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4.1.0
@@ -101,15 +66,13 @@ jobs:
         shell: pwsh
         run: |
           $serverZip = Get-ChildItem -Path "release" -Filter "SS14.Server_win-x64.zip" | Select-Object -First 1
-
           if (-not $serverZip) {
             Write-Error "Archive not found!"
             exit 1
           }
-
           $newName = "SS14.Server_${{ steps.version.outputs.VERSION }}.zip"
           Copy-Item $serverZip.FullName -Destination ".\$newName"
-
+          echo "SERVER_ZIP=$newName" >> $env:GITHUB_ENV
           echo "SERVER_ZIP=$newName" >> $env:GITHUB_OUTPUT
 
       - name: Generate changelog
@@ -117,13 +80,13 @@ jobs:
         shell: pwsh
         run: |
           $lastTag = "${env:LAST_TAG}"
-      
+
           if ($lastTag) {
             $commits = git log "$lastTag..HEAD" -50 --pretty=format:"- %s"
           } else {
             $commits = git log -50 --pretty=format:"- %s"
           }
-      
+
           echo "CHANGELOG<<EOF" >> $env:GITHUB_OUTPUT
           $commits | ForEach-Object { echo $_ } >> $env:GITHUB_OUTPUT
           echo "EOF" >> $env:GITHUB_OUTPUT
