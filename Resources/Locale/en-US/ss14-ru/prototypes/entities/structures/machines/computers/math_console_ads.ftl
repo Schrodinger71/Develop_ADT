@@ -1,0 +1,11 @@
+math-console-ads-1 = "RND Math Console! Develop your mind and earn research points!"
+math-console-ads-2 = "Solve equations, earn points! RND Math Console is waiting for you!"
+math-console-ads-3 = "Want to become smarter? RND Math Console - your path to knowledge!"
+math-console-ads-4 = "Mathematics is the queen of sciences! Test your knowledge on RND Console!"
+math-console-ads-5 = "From simple equations to complex problems! RND Math Console for everyone!"
+
+math-console-goodbyes-1 = "Goodbye! Come back for new mathematical challenges!"
+math-console-goodbyes-2 = "Thank you for using RND Math Console!"
+math-console-goodbyes-3 = "See you next time! Mathematics is waiting for you!"
+math-console-goodbyes-4 = "See you! Keep developing your mathematical mind!"
+math-console-goodbyes-5 = "Bye! Don't forget to practice mathematics!"
